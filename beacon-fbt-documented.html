@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beacon FBT - Detail</title>
+    
+    <!-- ============================================================
+         FONTS
+         Using Google's Overpass font family (regular + monospace)
+         ============================================================ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Overpass+Mono:wght@300..700&family=Overpass:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet">
+    
+    <style>
+        /* ============================================================
+           CSS CUSTOM PROPERTIES (THEME VARIABLES)
+           These define the color scheme for the entire application.
+           Modify these to match your application's branding.
+           ============================================================ */
+        :root {
+            --primary-color: #0081ea;       /* Main action buttons, focus states */
+            --secondary-color: #03dac5;     /* Secondary accent color (unused in mockup) */
+            --background-color: #f4f4f4;    /* Page background / button text color */
+            --checkmark-color: #ffffff;     /* Checkbox check color */
+            --font-color: #333;             /* Primary text color */
+            --border-color: #757575;        /* Input borders */
+            --error-color: #b5302e;         /* Error states (unused in mockup) */
+            --sensor-highlight: #e6f7ff;    /* Sensor-related highlights */
+            --pcms-highlight: #e6ffe6;      /* PCMS-related highlights (unused here) */
+        }
+
+        /* ============================================================
+           RESET & BASE STYLES
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            font-family: Overpass, sans-serif;
+            font-size: 16px;
+        }
+
+        /* ============================================================
+           LAYOUT STRUCTURE
+           The page uses a flexbox-based three-column layout:
+           - Left panel (20%): Universal device info fields
+           - Center panel (60%): Device-specific details + SENSOR DISTANCE
+           - Right panel (20%): Sensor association sidebar
+           
+           KEY DIFFERENCE FROM TWS: FBT includes sensor distance calculation
+           ============================================================ */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            margin: 0;
+        }
+
+        .detail-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .detail-content > div {
+            padding: 12px;
+        }
+
+        /* Left panel - Universal device information */
+        .universal {
+            flex: 1 1 20%;
+            background-color: #efefef;
+        }
+
+        /* Center panel - Device-specific details */
+        .detail {
+            flex: 3 1 60%;
+        }
+
+        /* Right panel - Sensor association sidebar */
+        .sidebar {
+            flex: 1 1 20%;
+            background-color: #fafafa;
+            max-height: calc(100vh - 48px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ============================================================
+           TOP NAVIGATION BAR
+           Contains: Back button, Project name, Action buttons
+           ============================================================ */
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: #cccccc;
+        }
+
+        .project, .filter, .search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .project-name {
+            font-size: 24px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ============================================================
+           FORM ELEMENTS
+           Standard styling for inputs, selects, labels, and checkboxes
+           ============================================================ */
+        label {
+            font-weight: bold;
+            color: var(--font-color);
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0, 129, 234, 0.5);
+        }
+
+        .universal input[type="text"],
+        .universal select, .detail input[type="text"], .detail select {
+            flex: 2 1 66%;
+            border-radius: 4px;
+            height: 40px;
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            margin: 1px 0;
+            box-sizing: border-box;
+        }
+
+        .universal .input-group, .input-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .universal .input-group p {
+            flex: 1 1 33%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .checkbox-group p {
+            text-align: right;
+            padding-right: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 40px;
+            height: 40px;
+        }
+
+        .check-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================================
+           BUTTONS
+           Primary action button styling
+           ============================================================ */
+        button {
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #006bbd;
+        }
+
+        .create-button, .sensor-button {
+            padding: 10px;
+        }
+
+        /* ============================================================
+           UTILITY CLASSES
+           ============================================================ */
+        .b {
+            font-weight: bold;
+        }
+
+        .mono {
+            font-family: "Overpass Mono", monospace;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        /* ============================================================
+           DETAIL SECTION LAYOUT
+           ============================================================ */
+        .header-wrapper {
+            display: flex;
+            padding-bottom: 8px;
+            margin: 8px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .detail-2col {
+            display: flex;
+        }
+
+        .header-wrapper > div {
+            flex: 1;
+        }
+
+        /* ============================================================
+           MODAL STYLES
+           Generic modal overlay and content box styling
+           ============================================================ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 20px;
+            top: 10px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-form .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .modal-form .input-group p {
+            min-width: 120px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .modal-form .input-group input,
+        .modal-form .input-group select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 35px;
+        }
+
+        .modal-form .checkbox-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+
+        .modal-form .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex: 1;
+            justify-content: flex-start;
+        }
+
+        .modal-form .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .modal-form .checkbox-group p {
+            text-align: left;
+            padding-right: 0;
+            margin: 0;
+            font-weight: normal;
+        }
+
+        .modal-form button[type="button"] {
+            align-self: center;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        /* ============================================================
+           SIDEBAR - SENSOR LIST STYLES
+           ============================================================ */
+        .sidebar h2 {
+            margin-bottom: 10px;
+        }
+
+        .add-new-btn {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .set-device-btn {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .sensor-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sensor-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .sensor-item.available {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .sensor-item.current {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .sensor-item.assigned {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .sensor-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .sensor-item input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .sensor-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .sensor-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .sensor-status.available {
+            background: #2196f3;
+            color: white;
+        }
+
+        .sensor-status.current {
+            background: #4caf50;
+            color: white;
+        }
+
+        .sensor-status.assigned {
+            background: #ff9800;
+            color: white;
+        }
+
+        .assignment-info {
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+            margin-left: 10px;
+        }
+
+        /* ============================================================
+           CONFIRMATION MODAL
+           ============================================================ */
+        .confirm-modal .modal-content {
+            text-align: center;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .confirm-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .yes-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .no-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .sidebar hr {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 20px 0;
+        }
+
+        /* ============================================================
+           ASSIGNED DEVICE DISPLAY
+           ============================================================ */
+        .assigned-device-display {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .assigned-device-display.none-assigned {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .assigned-device-display p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .assigned-device-display .device-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+     MAIN CONTAINER
+     ============================================================ -->
+<div class="container">
+    
+    <!-- ============================================================
+         TOP NAVIGATION BAR
+         ============================================================ -->
+    <div class="top-section">
+        <div class="project">
+            <button class="sensor-button" onclick="goBack()">Back</button>
+            <p class="b project-name">Trafficlynx</p>
+        </div>
+        <div class="buttons">
+            <button class="create-button" onclick="saveAndCreateNew()">Save and Create New</button>
+            <button class="sensor-button" onclick="saveAndBack()">Save and Back</button>
+            <button class="sensor-button" onclick="deleteDevice()">Delete</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MAIN CONTENT AREA - THREE COLUMN LAYOUT
+         ============================================================ -->
+    <div class="detail-content">
+        
+        <!-- ============================================================
+             LEFT PANEL: Universal Device Information
+             These fields are common across all device types
+             ============================================================ -->
+        <div class="universal">
+            <h1>Device Information</h1>
+            <div class="universal-wrapper">
+                
+                <!-- Device Type - Read-only, indicates this is a Beacon FBT -->
+                <div class="input-group">
+                    <p>Device Type</p>
+                    <select id="deviceType" disabled>
+                        <option selected>Beacon FBT</option>
+                    </select>
+                </div>
+                
+                <!-- Device Name - Primary identifier for the beacon
+                     IMPORTANT: This value is used to match sensor assignments -->
+                <div class="input-group">
+                    <p>Device Name</p>
+                    <input type="text" id="deviceName" value="Test Beacon FBT">
+                </div>
+                
+                <div class="input-group">
+                    <p>Contractor Label</p>
+                    <input type="text" id="contractorLabel" value="Testlab Beacon FBT">
+                </div>
+                
+                <div class="input-group">
+                    <p>Notes</p>
+                    <input type="text" id="notes" value="Testlab Beacon FBT Notes">
+                </div>
+                
+                <div class="input-group">
+                    <p>IP Address</p>
+                    <input type="text" id="ipAddress" value="166.253.70.129">
+                </div>
+                
+                <div class="input-group">
+                    <p>Port</p>
+                    <input type="text" id="port" value="4242">
+                </div>
+                
+                <!-- Latitude - Used for distance calculation to sensor
+                     FBT SPECIFIC: These coordinates are used in Haversine formula -->
+                <div class="input-group">
+                    <p>Latitude</p>
+                    <input type="text" id="latitude" value="29.534581">
+                </div>
+                
+                <!-- Longitude - Used for distance calculation to sensor -->
+                <div class="input-group">
+                    <p>Longitude</p>
+                    <input type="text" id="longitude" value="-98.427721">
+                </div>
+                
+                <div class="input-group">
+                    <p>Roadway</p>
+                    <input type="text" id="roadway">
+                </div>
+                
+                <div class="input-group">
+                    <p>Direction</p>
+                    <select id="direction">
+                        <option>N</option>
+                        <option>S</option>
+                        <option>E</option>
+                        <option>W</option>
+                    </select>
+                </div>
+                
+                <div class="checkbox-group">
+                    <p>Display Icon</p>
+                    <input type="checkbox" id="displayIcon" checked>
+                </div>
+                
+                <div class="checkbox-group">
+                    <p>Process Voltage</p>
+                    <input type="checkbox" id="processVoltage" checked>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ============================================================
+             CENTER PANEL: Device-Specific Details
+             
+             FBT SPECIFIC FEATURES:
+             - Sensor Distance display (calculated using Haversine formula)
+             - This shows the distance in miles from beacon to assigned sensor
+             ============================================================ -->
+        <div class="detail">
+            <h1>Device Details - Beacon FBT</h1>
+            <div class="header-wrapper">
+                <div class="input-group">
+                    <p>XML Name</p>
+                    <input type="text" id="xmlName">
+                </div>
+            </div>
+            
+            <!-- FBT SPECIFIC: Sensor Distance Display
+                 Shows distance in miles between beacon and assigned sensor
+                 Calculated using Haversine formula from lat/lng coordinates -->
+            <div class="detail-2col">
+                <div class="sidefire" style="flex: 1; border: none; padding: 12px; margin: 12px;">
+                    <p>Sensor Distance: <span id="sensorDistanceDisplay">NaN</span> mile(s)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ============================================================
+             RIGHT PANEL: Sensor Association Sidebar
+             
+             FBT SPECIFIC: Includes "View Beacon Logic" button at top
+             ============================================================ -->
+        <div class="sidebar">
+            <!-- FBT SPECIFIC: View Beacon Logic button -->
+            <button class="add-new-btn" onclick="viewBeaconLogic()">View Beacon Logic</button>
+            <hr>
+            
+            <h2>Associated Sensors</h2>
+            
+            <div id="assignedSensorDisplay" class="assigned-device-display none-assigned">
+                <p>Assigned Sensor</p>
+                <div class="device-name">None</div>
+            </div>
+            
+            <button class="add-new-btn" onclick="openAddSensorModal()">Add New Sensor - for Beacon FBT</button>
+            
+            <ul class="sensor-list" id="sensorList">
+                <!-- Populated by populateSensorList() -->
+            </ul>
+            
+            <button class="set-device-btn" onclick="setAssociatedSensor()">Set Device</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     ADD SENSOR MODAL
+     ============================================================ -->
+<div id="addSensorModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('addSensorModal')">&times;</span>
+        <h2>Add New Sensor - for Beacon FBT</h2>
+        <form class="modal-form" id="sensorForm">
+            <div class="input-group">
+                <p>Device Type</p>
+                <select disabled>
+                    <option selected>Sensor - for Beacon FBT</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <p>Device Name</p>
+                <input type="text" id="modalDeviceName" required>
+            </div>
+            <div class="input-group">
+                <p>Contractor Label</p>
+                <input type="text" id="modalContractorLabel">
+            </div>
+            <div class="input-group">
+                <p>Notes</p>
+                <input type="text" id="modalNotes">
+            </div>
+            <div class="input-group">
+                <p>IP Address</p>
+                <input type="text" id="modalIpAddress">
+            </div>
+            <div class="input-group">
+                <p>Port</p>
+                <input type="text" id="modalPort">
+            </div>
+            <!-- FBT SPECIFIC: Lat/Lng are captured for distance calculation -->
+            <div class="input-group">
+                <p>Latitude</p>
+                <input type="text" id="modalLatitude">
+            </div>
+            <div class="input-group">
+                <p>Longitude</p>
+                <input type="text" id="modalLongitude">
+            </div>
+            <div class="input-group">
+                <p>Roadway</p>
+                <input type="text" id="modalRoadway">
+            </div>
+            <div class="input-group">
+                <p>Direction</p>
+                <select id="modalDirection">
+                    <option>N</option>
+                    <option>S</option>
+                    <option>E</option>
+                    <option>W</option>
+                </select>
+            </div>
+            <div class="checkbox-row">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="modalDisplayIcon">
+                    <p>Display Icon</p>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="modalProcessVoltage">
+                    <p>Process Voltage</p>
+                </div>
+            </div>
+            <div class="input-group">
+                <p>XML Name</p>
+                <input type="text" id="modalXmlName">
+            </div>
+            <button type="button" onclick="saveNewSensor()">Save Sensor - for Beacon FBT</button>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================
+     CONFIRMATION MODAL
+     ============================================================ -->
+<div id="confirmModal" class="modal confirm-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('confirmModal')">&times;</span>
+        <h2>Confirm Association</h2>
+        <p id="confirmMessage"></p>
+        <div class="confirm-buttons">
+            <button class="confirm-btn yes-btn" id="confirmYes">Yes</button>
+            <button class="confirm-btn no-btn" onclick="closeModal('confirmModal')">No</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ============================================================
+       DATA STRUCTURES
+       
+       FBT SENSOR OBJECT (differs from TWS - includes lat/lng)
+       - id: number          Unique identifier
+       - name: string        Display name for the sensor
+       - ip: string          IP address of the sensor
+       - lat: number|null    Latitude coordinate (for distance calculation)
+       - lng: number|null    Longitude coordinate (for distance calculation)
+       - assignedTo: string|null  Name of beacon assigned to
+       
+       BEACON OBJECT
+       - id: number          Unique identifier
+       - deviceName: string  Name of the beacon device
+       - xmlName: string     XML export name
+       - assignedSensor: number|null  ID of assigned sensor
+       ============================================================ */
+    
+    // DEMO DATA: FBT sensors include lat/lng for distance calculation
+    let sensors = [
+        { id: 1, name: 'FBT Sensor A419', ip: '192.168.1.100', lat: 29.534581, lng: -98.427721, assignedTo: null },
+        { id: 2, name: 'FBT Sensor A058', ip: '192.168.1.101', lat: 29.535000, lng: -98.428000, assignedTo: 'Some Other Beacon FBT' },
+        { id: 3, name: 'FBT Sensor Dummy 1', ip: '192.168.1.102', lat: 29.540000, lng: -98.430000, assignedTo: 'Test Beacon FBT' }
+    ];
+    localStorage.setItem('projectFBTSensors', JSON.stringify(sensors));
+
+    let beacons = JSON.parse(localStorage.getItem('projectBeaconsFBT')) || [];
+
+    let currentBeaconId = 1;
+    let selectedSensorId = null;
+
+    /* ============================================================
+       FBT SPECIFIC: Current beacon location for distance calculation
+       In production, these should be read from the latitude/longitude
+       form fields dynamically
+       ============================================================ */
+    const currentBeaconLat = 29.534581;
+    const currentBeaconLng = -98.427721;
+
+    /**
+     * Save current state to localStorage
+     */
+    function saveToStorage() {
+        localStorage.setItem('projectFBTSensors', JSON.stringify(sensors));
+        localStorage.setItem('projectBeaconsFBT', JSON.stringify(beacons));
+    }
+
+    /* ============================================================
+       FBT SPECIFIC: DISTANCE CALCULATION FUNCTIONS
+       Uses Haversine formula to calculate distance between two
+       GPS coordinates on Earth's surface
+       ============================================================ */
+    
+    /**
+     * Calculate distance between two GPS coordinates using Haversine formula
+     * @param {number} lat1 - Latitude of first point
+     * @param {number} lon1 - Longitude of first point
+     * @param {number} lat2 - Latitude of second point
+     * @param {number} lon2 - Longitude of second point
+     * @returns {number} Distance in miles
+     */
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 3959; // Earth's radius in miles
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    /**
+     * FBT SPECIFIC: Update the sensor distance display
+     * Calculates and displays distance from beacon to assigned sensor
+     */
+    function updateSensorDistance() {
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon FBT';
+        const assignedSensor = sensors.find(s => s.assignedTo === currentName);
+        const distanceDisplay = document.getElementById('sensorDistanceDisplay');
+
+        if (assignedSensor && assignedSensor.lat && assignedSensor.lng) {
+            const distance = calculateDistance(currentBeaconLat, currentBeaconLng, assignedSensor.lat, assignedSensor.lng);
+            distanceDisplay.textContent = distance.toFixed(2);
+        } else {
+            distanceDisplay.textContent = 'NaN';
+        }
+    }
+
+    /**
+     * Updates the "Assigned Sensor" display box
+     */
+    function updateAssignedSensorDisplay() {
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon FBT';
+        const assignedSensor = sensors.find(s => s.assignedTo === currentName);
+        const displayEl = document.getElementById('assignedSensorDisplay');
+        const nameEl = displayEl.querySelector('.device-name');
+
+        if (assignedSensor) {
+            displayEl.classList.remove('none-assigned');
+            nameEl.textContent = `${assignedSensor.name} (${assignedSensor.ip})`;
+        } else {
+            displayEl.classList.add('none-assigned');
+            nameEl.textContent = 'None';
+        }
+    }
+
+    /**
+     * Populates the sensor list in the sidebar
+     * FBT SPECIFIC: Also calls updateSensorDistance() to refresh distance display
+     */
+    function populateSensorList() {
+        const list = document.getElementById('sensorList');
+        list.innerHTML = '';
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon FBT';
+
+        // Update displays including FBT-specific distance
+        updateAssignedSensorDisplay();
+        updateSensorDistance();
+
+        sensors.forEach(sensor => {
+            const li = document.createElement('li');
+            const isAvailable = !sensor.assignedTo;
+            const isAssignedToCurrent = sensor.assignedTo === currentName;
+            const isAssignedToOther = sensor.assignedTo && sensor.assignedTo !== currentName;
+
+            li.className = 'sensor-item';
+            if (isAvailable) li.classList.add('available');
+            if (isAssignedToCurrent) li.classList.add('current');
+            if (isAssignedToOther) li.classList.add('assigned');
+
+            let statusBadge = '';
+            let assignmentDetails = '';
+
+            if (isAvailable) {
+                statusBadge = '<span class="sensor-status available">Available</span>';
+            } else if (isAssignedToCurrent) {
+                statusBadge = '<span class="sensor-status current">Assigned Here</span>';
+            } else if (isAssignedToOther) {
+                statusBadge = '<span class="sensor-status assigned">Assigned</span>';
+                assignmentDetails = `<div class="assignment-info">Currently: ${sensor.assignedTo}</div>`;
+            }
+
+            li.innerHTML = `
+                <input type="radio" name="associatedSensor" value="${sensor.id}"
+                    ${sensor.id === selectedSensorId ? 'checked' : ''}
+                    onchange="updateSelectedSensor(${sensor.id})">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center;">
+                        <span class="sensor-name">${sensor.name} (${sensor.ip})</span>
+                        ${statusBadge}
+                    </div>
+                    ${assignmentDetails}
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function updateSelectedSensor(id) {
+        selectedSensorId = id;
+    }
+
+    /* ============================================================
+       SENSOR ASSIGNMENT FUNCTIONS
+       Same business rules as TWS version
+       ============================================================ */
+    
+    function setAssociatedSensor() {
+        if (!selectedSensorId) {
+            alert('Please select a sensor first.');
+            return;
+        }
+        const sensor = sensors.find(s => s.id === selectedSensorId);
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon FBT';
+
+        if (sensor.assignedTo === currentName) {
+            alert('This sensor is already assigned to this beacon.');
+            return;
+        }
+
+        if (sensor.assignedTo && sensor.assignedTo !== currentName) {
+            document.getElementById('confirmMessage').textContent =
+                `This sensor is currently assigned to "${sensor.assignedTo}". Do you want to reassign it to "${currentName}"?`;
+            document.getElementById('confirmYes').onclick = () => confirmAssociation(selectedSensorId, true);
+            openModal('confirmModal');
+        } else {
+            updateAssignments(selectedSensorId, currentName);
+            alert('Device set successfully!');
+        }
+    }
+
+    function confirmAssociation(sensorId, override) {
+        if (override) {
+            const currentName = document.getElementById('deviceName').value || 'Test Beacon FBT';
+            updateAssignments(sensorId, currentName);
+            alert('Device reassigned successfully!');
+        }
+        closeModal('confirmModal');
+    }
+
+    function updateAssignments(sensorId, newAssignment) {
+        sensors.forEach(s => {
+            if (s.assignedTo === newAssignment) {
+                s.assignedTo = null;
+            }
+        });
+
+        const sensor = sensors.find(s => s.id === sensorId);
+        if (sensor) sensor.assignedTo = newAssignment;
+
+        saveToStorage();
+        populateSensorList();
+    }
+
+    /* ============================================================
+       MODAL FUNCTIONS
+       ============================================================ */
+    
+    function openAddSensorModal() {
+        document.getElementById('modalDeviceName').value = '';
+        document.getElementById('modalContractorLabel').value = '';
+        document.getElementById('modalNotes').value = '';
+        document.getElementById('modalIpAddress').value = '';
+        document.getElementById('modalPort').value = '';
+        document.getElementById('modalLatitude').value = '';
+        document.getElementById('modalLongitude').value = '';
+        document.getElementById('modalRoadway').value = '';
+        document.getElementById('modalDirection').value = 'N';
+        document.getElementById('modalDisplayIcon').checked = false;
+        document.getElementById('modalProcessVoltage').checked = false;
+        document.getElementById('modalXmlName').value = '';
+        openModal('addSensorModal');
+    }
+
+    /**
+     * FBT SPECIFIC: Saves new sensor including lat/lng for distance calculation
+     */
+    function saveNewSensor() {
+        const name = document.getElementById('modalDeviceName').value;
+        if (!name) {
+            alert('Device Name is required');
+            return;
+        }
+        const newSensor = {
+            id: Date.now(),
+            name,
+            ip: document.getElementById('modalIpAddress').value || '192.168.1.' + Math.floor(Math.random() * 255),
+            // FBT SPECIFIC: Parse lat/lng for distance calculation
+            lat: parseFloat(document.getElementById('modalLatitude').value) || null,
+            lng: parseFloat(document.getElementById('modalLongitude').value) || null,
+            assignedTo: null
+        };
+        sensors.push(newSensor);
+        saveToStorage();
+        populateSensorList();
+        closeModal('addSensorModal');
+        alert('Sensor - for Beacon FBT added successfully!');
+    }
+
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    /* ============================================================
+       MAIN FORM ACTIONS
+       ============================================================ */
+    
+    function saveAndCreateNew() {
+        const formData = {
+            deviceName: document.getElementById('deviceName').value,
+            xmlName: document.getElementById('xmlName').value,
+            associatedSensor: selectedSensorId
+        };
+        console.log('Save Data:', formData);
+        if (!formData.deviceName) {
+            alert('Device Name is required');
+            return;
+        }
+        if (!formData.associatedSensor) {
+            alert('Please select an associated sensor');
+            return;
+        }
+        beacons.push({ id: ++currentBeaconId, ...formData, assignedSensor: formData.associatedSensor });
+        saveToStorage();
+        alert('Saved and created new!');
+    }
+
+    function saveAndBack() {
+        saveAndCreateNew();
+        goBack();
+    }
+
+    function deleteDevice() {
+        alert('Delete functionality simulated');
+    }
+
+    /**
+     * FBT SPECIFIC: View Beacon Logic button handler
+     * TODO: Implement navigation to beacon logic editor
+     */
+    function viewBeaconLogic() {
+        alert('View Beacon Logic - simulated');
+    }
+
+    function goBack() {
+        alert('Back to list - simulated');
+    }
+
+    /* ============================================================
+       DEBUG / DEMO FUNCTIONS
+       ============================================================ */
+    
+    window.resetDemoData = function() {
+        sensors = [
+            { id: 1, name: 'FBT Sensor A419', ip: '192.168.1.100', lat: 29.534581, lng: -98.427721, assignedTo: null },
+            { id: 2, name: 'FBT Sensor A058', ip: '192.168.1.101', lat: 29.535000, lng: -98.428000, assignedTo: 'Some Other Beacon FBT' },
+            { id: 3, name: 'FBT Sensor Dummy 1', ip: '192.168.1.102', lat: 29.540000, lng: -98.430000, assignedTo: 'Test Beacon FBT' }
+        ];
+        localStorage.setItem('projectFBTSensors', JSON.stringify(sensors));
+        populateSensorList();
+        alert('Demo data reset! Sensors reloaded with all 3 states.');
+    };
+
+    /* ============================================================
+       INITIALIZATION
+       ============================================================ */
+    
+    populateSensorList();
+    
+    window.onclick = function(event) {
+        const modals = document.getElementsByClassName('modal');
+        for (let modal of modals) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    };
+</script>
+</body>
+</html>

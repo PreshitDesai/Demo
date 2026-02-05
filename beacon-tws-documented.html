@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beacon TWS - Detail</title>
+    
+    <!-- ============================================================
+         FONTS
+         Using Google's Overpass font family (regular + monospace)
+         ============================================================ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Overpass+Mono:wght@300..700&family=Overpass:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet">
+    
+    <style>
+        /* ============================================================
+           CSS CUSTOM PROPERTIES (THEME VARIABLES)
+           These define the color scheme for the entire application.
+           Modify these to match your application's branding.
+           ============================================================ */
+        :root {
+            --primary-color: #0081ea;       /* Main action buttons, focus states */
+            --secondary-color: #03dac5;     /* Secondary accent color (unused in mockup) */
+            --background-color: #f4f4f4;    /* Page background / button text color */
+            --checkmark-color: #ffffff;     /* Checkbox check color */
+            --font-color: #333;             /* Primary text color */
+            --border-color: #757575;        /* Input borders */
+            --error-color: #b5302e;         /* Error states (unused in mockup) */
+            --sensor-highlight: #e6f7ff;    /* Sensor-related highlights */
+            --pcms-highlight: #e6ffe6;      /* PCMS-related highlights (unused here) */
+        }
+
+        /* ============================================================
+           RESET & BASE STYLES
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        body {
+            font-family: Overpass, sans-serif;
+            font-size: 16px;
+        }
+
+        /* ============================================================
+           LAYOUT STRUCTURE
+           The page uses a flexbox-based three-column layout:
+           - Left panel (20%): Universal device info fields
+           - Center panel (60%): Device-specific details  
+           - Right panel (20%): Sensor association sidebar
+           ============================================================ */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            margin: 0;
+        }
+
+        .detail-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .detail-content > div {
+            padding: 12px;
+        }
+
+        /* Left panel - Universal device information */
+        .universal {
+            flex: 1 1 20%;
+            background-color: #efefef;
+        }
+
+        /* Center panel - Device-specific details */
+        .detail {
+            flex: 3 1 60%;
+        }
+
+        /* Right panel - Sensor association sidebar */
+        .sidebar {
+            flex: 1 1 20%;
+            background-color: #fafafa;
+            max-height: calc(100vh - 48px);  /* Account for top section height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ============================================================
+           TOP NAVIGATION BAR
+           Contains: Back button, Project name, Action buttons
+           ============================================================ */
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: #cccccc;
+        }
+
+        .project, .filter, .search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .project-name {
+            font-size: 24px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ============================================================
+           FORM ELEMENTS
+           Standard styling for inputs, selects, labels, and checkboxes
+           ============================================================ */
+        label {
+            font-weight: bold;
+            color: var(--font-color);
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0, 129, 234, 0.5);
+        }
+
+        /* Input groups in the universal/detail panels */
+        .universal input[type="text"],
+        .universal select, .detail input[type="text"], .detail select {
+            flex: 2 1 66%;
+            border-radius: 4px;
+            height: 40px;
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            margin: 1px 0;
+            box-sizing: border-box;
+        }
+
+        .universal .input-group, .input-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .universal .input-group p {
+            flex: 1 1 33%;
+        }
+
+        /* Checkbox styling */
+        .checkbox-group {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .checkbox-group p {
+            text-align: right;
+            padding-right: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 40px;
+            height: 40px;
+        }
+
+        .check-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================================
+           BUTTONS
+           Primary action button styling
+           ============================================================ */
+        button {
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #006bbd;
+        }
+
+        .create-button, .sensor-button {
+            padding: 10px;
+        }
+
+        /* ============================================================
+           UTILITY CLASSES
+           ============================================================ */
+        .b {
+            font-weight: bold;
+        }
+
+        .mono {
+            font-family: "Overpass Mono", monospace;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        /* ============================================================
+           DETAIL SECTION LAYOUT
+           Header wrapper for the device details area
+           ============================================================ */
+        .header-wrapper {
+            display: flex;
+            padding-bottom: 8px;
+            margin: 8px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .detail-2col {
+            display: flex;
+        }
+
+        .header-wrapper > div {
+            flex: 1;
+        }
+
+        /* ============================================================
+           MODAL STYLES
+           Generic modal overlay and content box styling
+           Used for: Add Sensor modal, Confirmation modal
+           ============================================================ */
+        .modal {
+            display: none;              /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);  /* Semi-transparent backdrop */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 20px;
+            top: 10px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Modal form layout */
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-form .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .modal-form .input-group p {
+            min-width: 120px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .modal-form .input-group input,
+        .modal-form .input-group select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 35px;
+        }
+
+        .modal-form .checkbox-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+
+        .modal-form .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex: 1;
+            justify-content: flex-start;
+        }
+
+        .modal-form .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .modal-form .checkbox-group p {
+            text-align: left;
+            padding-right: 0;
+            margin: 0;
+            font-weight: normal;
+        }
+
+        .modal-form button[type="button"] {
+            align-self: center;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        /* ============================================================
+           SIDEBAR - SENSOR LIST STYLES
+           The sidebar displays available sensors with status badges
+           showing: Available, Assigned Here, or Assigned (to other)
+           ============================================================ */
+        .sidebar h2 {
+            margin-bottom: 10px;
+        }
+
+        .add-new-btn {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .set-device-btn {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .sensor-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        /* Individual sensor item in the list */
+        .sensor-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        /* Sensor state styling - Available (blue) */
+        .sensor-item.available {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        /* Sensor state styling - Assigned to current beacon (green) */
+        .sensor-item.current {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        /* Sensor state styling - Assigned to another beacon (orange) */
+        .sensor-item.assigned {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .sensor-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .sensor-item input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .sensor-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        /* Status badge styling */
+        .sensor-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .sensor-status.available {
+            background: #2196f3;
+            color: white;
+        }
+
+        .sensor-status.current {
+            background: #4caf50;
+            color: white;
+        }
+
+        .sensor-status.assigned {
+            background: #ff9800;
+            color: white;
+        }
+
+        .assignment-info {
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+            margin-left: 10px;
+        }
+
+        /* ============================================================
+           CONFIRMATION MODAL
+           Used when reassigning a sensor from one beacon to another
+           ============================================================ */
+        .confirm-modal .modal-content {
+            text-align: center;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .confirm-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .yes-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .no-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        /* Sidebar separator */
+        .sidebar hr {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 20px 0;
+        }
+
+        /* ============================================================
+           ASSIGNED DEVICE DISPLAY
+           Shows the currently assigned sensor at the top of sidebar
+           Green when assigned, orange when none assigned
+           ============================================================ */
+        .assigned-device-display {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .assigned-device-display.none-assigned {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .assigned-device-display p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .assigned-device-display .device-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================
+     MAIN CONTAINER
+     ============================================================ -->
+<div class="container">
+    
+    <!-- ============================================================
+         TOP NAVIGATION BAR
+         Contains navigation and primary action buttons
+         ============================================================ -->
+    <div class="top-section">
+        <div class="project">
+            <!-- Back button - returns to device list -->
+            <button class="sensor-button" onclick="goBack()">Back</button>
+            <!-- Project name display - hardcoded for mockup -->
+            <p class="b project-name">Trafficlynx</p>
+        </div>
+        <div class="buttons">
+            <!-- Primary action buttons for the form -->
+            <button class="create-button" onclick="saveAndCreateNew()">Save and Create New</button>
+            <button class="sensor-button" onclick="saveAndBack()">Save and Back</button>
+            <button class="sensor-button" onclick="deleteDevice()">Delete</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MAIN CONTENT AREA - THREE COLUMN LAYOUT
+         ============================================================ -->
+    <div class="detail-content">
+        
+        <!-- ============================================================
+             LEFT PANEL: Universal Device Information
+             These fields are common across all device types
+             ============================================================ -->
+        <div class="universal">
+            <h1>Device Information</h1>
+            <div class="universal-wrapper">
+                
+                <!-- Device Type - Read-only, indicates this is a Beacon TWS -->
+                <div class="input-group">
+                    <p>Device Type</p>
+                    <select id="deviceType" disabled>
+                        <option selected>Beacon TWS</option>
+                    </select>
+                </div>
+                
+                <!-- Device Name - Primary identifier for the beacon
+                     IMPORTANT: This value is used to match sensor assignments -->
+                <div class="input-group">
+                    <p>Device Name</p>
+                    <input type="text" id="deviceName" value="Test Beacon TWS">
+                </div>
+                
+                <!-- Contractor Label - Secondary identifier for contractors -->
+                <div class="input-group">
+                    <p>Contractor Label</p>
+                    <input type="text" id="contractorLabel" value="Testlab Beacon TWS">
+                </div>
+                
+                <!-- Notes - Free-form notes field -->
+                <div class="input-group">
+                    <p>Notes</p>
+                    <input type="text" id="notes" value="Testlab Beacon TWS Notes">
+                </div>
+                
+                <!-- IP Address - Network address for the device -->
+                <div class="input-group">
+                    <p>IP Address</p>
+                    <input type="text" id="ipAddress" value="166.253.70.129">
+                </div>
+                
+                <!-- Port - Network port for communication -->
+                <div class="input-group">
+                    <p>Port</p>
+                    <input type="text" id="port" value="4242">
+                </div>
+                
+                <!-- Latitude - GPS coordinate -->
+                <div class="input-group">
+                    <p>Latitude</p>
+                    <input type="text" id="latitude" value="29.534581">
+                </div>
+                
+                <!-- Longitude - GPS coordinate -->
+                <div class="input-group">
+                    <p>Longitude</p>
+                    <input type="text" id="longitude" value="-98.427721">
+                </div>
+                
+                <!-- Roadway - The road/highway where device is installed -->
+                <div class="input-group">
+                    <p>Roadway</p>
+                    <input type="text" id="roadway">
+                </div>
+                
+                <!-- Direction - Cardinal direction (N/S/E/W) -->
+                <div class="input-group">
+                    <p>Direction</p>
+                    <select id="direction">
+                        <option>N</option>
+                        <option>S</option>
+                        <option>E</option>
+                        <option>W</option>
+                    </select>
+                </div>
+                
+                <!-- Display Icon - Whether to show icon on map -->
+                <div class="checkbox-group">
+                    <p>Display Icon</p>
+                    <input type="checkbox" id="displayIcon" checked>
+                </div>
+                
+                <!-- Process Voltage - Whether to monitor voltage levels -->
+                <div class="checkbox-group">
+                    <p>Process Voltage</p>
+                    <input type="checkbox" id="processVoltage" checked>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ============================================================
+             CENTER PANEL: Device-Specific Details
+             Fields specific to Beacon TWS devices
+             NOTE: Beacon TWS has fewer specific fields than other device types
+             ============================================================ -->
+        <div class="detail">
+            <h1>Device Details - Beacon TWS</h1>
+            <div class="header-wrapper">
+                <!-- XML Name - Identifier used in XML exports/imports -->
+                <div class="input-group">
+                    <p>XML Name</p>
+                    <input type="text" id="xmlName">
+                </div>
+            </div>
+            <!-- NOTE: Beacon TWS does NOT have:
+                 - Sensor Distance section
+                 - Beacon Logic section
+                 These are specific to other device types -->
+        </div>
+        
+        <!-- ============================================================
+             RIGHT PANEL: Sensor Association Sidebar
+             Manages the one-to-one relationship between Beacon TWS and Sensors
+             ============================================================ -->
+        <div class="sidebar">
+            <!-- NOTE: Beacon TWS does NOT have a "View Beacon Logic" button -->
+            <h2>Associated Sensors</h2>
+            
+            <!-- Current Assignment Display
+                 Shows which sensor is currently assigned to this beacon -->
+            <div id="assignedSensorDisplay" class="assigned-device-display none-assigned">
+                <p>Assigned Sensor</p>
+                <div class="device-name">None</div>
+            </div>
+            
+            <!-- Button to open modal for creating a new sensor -->
+            <button class="add-new-btn" onclick="openAddSensorModal()">Add New Sensor - for Beacon TWS</button>
+            
+            <!-- Sensor List - Dynamically populated by JavaScript -->
+            <ul class="sensor-list" id="sensorList">
+                <!-- Populated by populateSensorList() -->
+            </ul>
+            
+            <!-- Button to confirm sensor assignment -->
+            <button class="set-device-btn" onclick="setAssociatedSensor()">Set Device</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     ADD SENSOR MODAL
+     Form for creating a new Sensor - for Beacon TWS
+     ============================================================ -->
+<div id="addSensorModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('addSensorModal')">&times;</span>
+        <h2>Add New Sensor - for Beacon TWS</h2>
+        <form class="modal-form" id="sensorForm">
+            <!-- Device Type - Read-only -->
+            <div class="input-group">
+                <p>Device Type</p>
+                <select disabled>
+                    <option selected>Sensor - for Beacon TWS</option>
+                </select>
+            </div>
+            
+            <!-- Same fields as main form for sensor creation -->
+            <div class="input-group">
+                <p>Device Name</p>
+                <input type="text" id="modalDeviceName" required>
+            </div>
+            <div class="input-group">
+                <p>Contractor Label</p>
+                <input type="text" id="modalContractorLabel">
+            </div>
+            <div class="input-group">
+                <p>Notes</p>
+                <input type="text" id="modalNotes">
+            </div>
+            <div class="input-group">
+                <p>IP Address</p>
+                <input type="text" id="modalIpAddress">
+            </div>
+            <div class="input-group">
+                <p>Port</p>
+                <input type="text" id="modalPort">
+            </div>
+            <div class="input-group">
+                <p>Latitude</p>
+                <input type="text" id="modalLatitude">
+            </div>
+            <div class="input-group">
+                <p>Longitude</p>
+                <input type="text" id="modalLongitude">
+            </div>
+            <div class="input-group">
+                <p>Roadway</p>
+                <input type="text" id="modalRoadway">
+            </div>
+            <div class="input-group">
+                <p>Direction</p>
+                <select id="modalDirection">
+                    <option>N</option>
+                    <option>S</option>
+                    <option>E</option>
+                    <option>W</option>
+                </select>
+            </div>
+            <div class="checkbox-row">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="modalDisplayIcon">
+                    <p>Display Icon</p>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="modalProcessVoltage">
+                    <p>Process Voltage</p>
+                </div>
+            </div>
+            <div class="input-group">
+                <p>XML Name</p>
+                <input type="text" id="modalXmlName">
+            </div>
+            <button type="button" onclick="saveNewSensor()">Save Sensor - for Beacon TWS</button>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================
+     CONFIRMATION MODAL
+     Appears when reassigning a sensor that's already assigned to another beacon
+     ============================================================ -->
+<div id="confirmModal" class="modal confirm-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('confirmModal')">&times;</span>
+        <h2>Confirm Association</h2>
+        <!-- Message is set dynamically via JavaScript -->
+        <p id="confirmMessage"></p>
+        <div class="confirm-buttons">
+            <!-- Yes button onclick is set dynamically -->
+            <button class="confirm-btn yes-btn" id="confirmYes">Yes</button>
+            <button class="confirm-btn no-btn" onclick="closeModal('confirmModal')">No</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ============================================================
+       DATA STRUCTURES
+       
+       SENSORS ARRAY
+       Each sensor object contains:
+       - id: number          Unique identifier
+       - name: string        Display name for the sensor
+       - ip: string          IP address of the sensor
+       - assignedTo: string|null  Name of beacon this sensor is assigned to, or null if unassigned
+       
+       BEACONS ARRAY
+       Each beacon object contains:
+       - id: number          Unique identifier
+       - deviceName: string  Name of the beacon device
+       - xmlName: string     XML export name
+       - assignedSensor: number|null  ID of assigned sensor
+       ============================================================ */
+    
+    // DEMO DATA: Reset sensors to demo state for POC
+    // NOTE: In production, this would load from your database
+    let sensors = [
+        { id: 1, name: 'TWS Sensor A419', ip: '192.168.1.100', assignedTo: null },
+        { id: 2, name: 'TWS Sensor A058', ip: '192.168.1.101', assignedTo: 'Some Other Beacon TWS' },
+        { id: 3, name: 'TWS Sensor Dummy 1', ip: '192.168.1.102', assignedTo: 'Test Beacon TWS' }
+    ];
+    
+    // Store demo sensors in localStorage (mockup persistence)
+    // NOTE: Replace with actual API calls in production
+    localStorage.setItem('projectTWSSensors', JSON.stringify(sensors));
+
+    // Load beacons from localStorage or initialize empty array
+    let beacons = JSON.parse(localStorage.getItem('projectBeaconsTWS')) || [];
+
+    // Current beacon ID (simulated - would come from URL param or route in production)
+    let currentBeaconId = 1;
+    
+    // Currently selected sensor ID in the radio list (null = none selected)
+    let selectedSensorId = null;
+
+    /* ============================================================
+       STORAGE FUNCTIONS
+       Handles persistence to localStorage (mockup)
+       Replace these with API calls to your backend in production
+       ============================================================ */
+    
+    /**
+     * Save current state to localStorage
+     * TODO: Replace with API POST/PUT calls
+     */
+    function saveToStorage() {
+        localStorage.setItem('projectTWSSensors', JSON.stringify(sensors));
+        localStorage.setItem('projectBeaconsTWS', JSON.stringify(beacons));
+    }
+
+    /* ============================================================
+       UI UPDATE FUNCTIONS
+       ============================================================ */
+    
+    /**
+     * Updates the "Assigned Sensor" display box at top of sidebar
+     * Shows currently assigned sensor or "None" if unassigned
+     */
+    function updateAssignedSensorDisplay() {
+        // Get current beacon name from the form
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon TWS';
+        
+        // Find sensor assigned to this beacon (by matching assignedTo field)
+        const assignedSensor = sensors.find(s => s.assignedTo === currentName);
+        
+        const displayEl = document.getElementById('assignedSensorDisplay');
+        const nameEl = displayEl.querySelector('.device-name');
+
+        if (assignedSensor) {
+            // Sensor is assigned - show green styling with sensor name + IP
+            displayEl.classList.remove('none-assigned');
+            nameEl.textContent = `${assignedSensor.name} (${assignedSensor.ip})`;
+        } else {
+            // No sensor assigned - show orange styling with "None"
+            displayEl.classList.add('none-assigned');
+            nameEl.textContent = 'None';
+        }
+    }
+
+    /**
+     * Populates the sensor list in the sidebar
+     * Each sensor shows one of three states:
+     * - Available (blue): Not assigned to any beacon
+     * - Assigned Here (green): Assigned to this beacon
+     * - Assigned (orange): Assigned to a different beacon
+     */
+    function populateSensorList() {
+        const list = document.getElementById('sensorList');
+        list.innerHTML = '';  // Clear existing list
+        
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon TWS';
+
+        // Update the header display
+        updateAssignedSensorDisplay();
+
+        // Build list items for each sensor
+        sensors.forEach(sensor => {
+            const li = document.createElement('li');
+            
+            // Determine sensor assignment state
+            const isAvailable = !sensor.assignedTo;
+            const isAssignedToCurrent = sensor.assignedTo === currentName;
+            const isAssignedToOther = sensor.assignedTo && sensor.assignedTo !== currentName;
+
+            // Apply base class and state-specific class
+            li.className = 'sensor-item';
+            if (isAvailable) li.classList.add('available');
+            if (isAssignedToCurrent) li.classList.add('current');
+            if (isAssignedToOther) li.classList.add('assigned');
+
+            // Build status badge HTML
+            let statusBadge = '';
+            let assignmentDetails = '';
+
+            if (isAvailable) {
+                statusBadge = '<span class="sensor-status available">Available</span>';
+            } else if (isAssignedToCurrent) {
+                statusBadge = '<span class="sensor-status current">Assigned Here</span>';
+            } else if (isAssignedToOther) {
+                statusBadge = '<span class="sensor-status assigned">Assigned</span>';
+                // Show which beacon it's currently assigned to
+                assignmentDetails = `<div class="assignment-info">Currently: ${sensor.assignedTo}</div>`;
+            }
+
+            // Build complete list item HTML
+            li.innerHTML = `
+                <input type="radio" name="associatedSensor" value="${sensor.id}"
+                    ${sensor.id === selectedSensorId ? 'checked' : ''}
+                    onchange="updateSelectedSensor(${sensor.id})">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center;">
+                        <span class="sensor-name">${sensor.name} (${sensor.ip})</span>
+                        ${statusBadge}
+                    </div>
+                    ${assignmentDetails}
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    /**
+     * Updates the selected sensor ID when user clicks a radio button
+     * @param {number} id - The sensor ID that was selected
+     */
+    function updateSelectedSensor(id) {
+        selectedSensorId = id;
+    }
+
+    /* ============================================================
+       SENSOR ASSIGNMENT FUNCTIONS
+       Handles the business logic for associating sensors with beacons
+       
+       BUSINESS RULES:
+       1. A beacon can only have ONE sensor assigned at a time
+       2. A sensor can only be assigned to ONE beacon at a time
+       3. Reassigning removes the old assignment automatically
+       4. User is prompted to confirm when reassigning from another beacon
+       ============================================================ */
+    
+    /**
+     * Main handler for the "Set Device" button
+     * Validates selection and handles assignment logic
+     */
+    function setAssociatedSensor() {
+        // Validate: must select a sensor first
+        if (!selectedSensorId) {
+            alert('Please select a sensor first.');
+            return;
+        }
+        
+        const sensor = sensors.find(s => s.id === selectedSensorId);
+        const currentName = document.getElementById('deviceName').value || 'Test Beacon TWS';
+
+        // Case 1: Already assigned to this beacon - no action needed
+        if (sensor.assignedTo === currentName) {
+            alert('This sensor is already assigned to this beacon.');
+            return;
+        }
+
+        // Case 2: Assigned to another beacon - prompt for confirmation
+        if (sensor.assignedTo && sensor.assignedTo !== currentName) {
+            document.getElementById('confirmMessage').textContent =
+                `This sensor is currently assigned to "${sensor.assignedTo}". Do you want to reassign it to "${currentName}"?`;
+            document.getElementById('confirmYes').onclick = () => confirmAssociation(selectedSensorId, true);
+            openModal('confirmModal');
+        } else {
+            // Case 3: Available - assign directly
+            updateAssignments(selectedSensorId, currentName);
+            alert('Device set successfully!');
+        }
+    }
+
+    /**
+     * Handles confirmation dialog response
+     * @param {number} sensorId - ID of sensor to assign
+     * @param {boolean} override - Whether user confirmed the reassignment
+     */
+    function confirmAssociation(sensorId, override) {
+        if (override) {
+            const currentName = document.getElementById('deviceName').value || 'Test Beacon TWS';
+            updateAssignments(sensorId, currentName);
+            alert('Device reassigned successfully!');
+        }
+        closeModal('confirmModal');
+    }
+
+    /**
+     * Updates sensor assignments in the data structure
+     * Enforces one-to-one relationship rules
+     * @param {number} sensorId - ID of sensor to assign
+     * @param {string} newAssignment - Name of beacon to assign to
+     */
+    function updateAssignments(sensorId, newAssignment) {
+        // STEP 1: Remove any existing sensor assignment to this beacon
+        // (Ensures only one sensor per beacon)
+        sensors.forEach(s => {
+            if (s.assignedTo === newAssignment) {
+                s.assignedTo = null;
+            }
+        });
+
+        // STEP 2: Assign the selected sensor to this beacon
+        const sensor = sensors.find(s => s.id === sensorId);
+        if (sensor) sensor.assignedTo = newAssignment;
+
+        // STEP 3: Persist changes and refresh UI
+        saveToStorage();
+        populateSensorList();
+    }
+
+    /* ============================================================
+       MODAL FUNCTIONS
+       ============================================================ */
+    
+    /**
+     * Opens the "Add New Sensor" modal and resets form fields
+     */
+    function openAddSensorModal() {
+        // Reset all form fields to empty/default values
+        document.getElementById('modalDeviceName').value = '';
+        document.getElementById('modalContractorLabel').value = '';
+        document.getElementById('modalNotes').value = '';
+        document.getElementById('modalIpAddress').value = '';
+        document.getElementById('modalPort').value = '';
+        document.getElementById('modalLatitude').value = '';
+        document.getElementById('modalLongitude').value = '';
+        document.getElementById('modalRoadway').value = '';
+        document.getElementById('modalDirection').value = 'N';
+        document.getElementById('modalDisplayIcon').checked = false;
+        document.getElementById('modalProcessVoltage').checked = false;
+        document.getElementById('modalXmlName').value = '';
+        openModal('addSensorModal');
+    }
+
+    /**
+     * Saves a new sensor from the modal form
+     * Creates sensor with unique ID and adds to list
+     */
+    function saveNewSensor() {
+        const name = document.getElementById('modalDeviceName').value;
+        
+        // Validate required field
+        if (!name) {
+            alert('Device Name is required');
+            return;
+        }
+        
+        // Create new sensor object
+        // NOTE: In production, this would POST to your API
+        const newSensor = {
+            id: Date.now(),  // Use timestamp as unique ID (replace with DB-generated ID)
+            name,
+            ip: document.getElementById('modalIpAddress').value || '192.168.1.' + Math.floor(Math.random() * 255),
+            assignedTo: null  // New sensors start unassigned
+        };
+        
+        sensors.push(newSensor);
+        saveToStorage();
+        populateSensorList();
+        closeModal('addSensorModal');
+        alert('Sensor - for Beacon TWS added successfully!');
+    }
+
+    /**
+     * Opens a modal by ID
+     * @param {string} modalId - DOM ID of the modal to open
+     */
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+
+    /**
+     * Closes a modal by ID
+     * @param {string} modalId - DOM ID of the modal to close
+     */
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    /* ============================================================
+       MAIN FORM ACTIONS
+       ============================================================ */
+    
+    /**
+     * Saves current beacon and creates a new blank form
+     */
+    function saveAndCreateNew() {
+        // Collect all form data
+        const formData = {
+            deviceName: document.getElementById('deviceName').value,
+            xmlName: document.getElementById('xmlName').value,
+            associatedSensor: selectedSensorId
+            // TODO: Add all other form fields for production
+        };
+        
+        console.log('Save Data:', formData);
+        
+        // Validate required fields
+        if (!formData.deviceName) {
+            alert('Device Name is required');
+            return;
+        }
+        if (!formData.associatedSensor) {
+            alert('Please select an associated sensor');
+            return;
+        }
+        
+        // Save beacon (mockup - would be API call in production)
+        beacons.push({ 
+            id: ++currentBeaconId, 
+            ...formData, 
+            assignedSensor: formData.associatedSensor 
+        });
+        saveToStorage();
+        alert('Saved and created new!');
+        
+        // TODO: Reset form for new entry
+    }
+
+    /**
+     * Saves current beacon and navigates back to list
+     */
+    function saveAndBack() {
+        saveAndCreateNew();
+        goBack();
+    }
+
+    /**
+     * Deletes the current beacon device
+     * TODO: Implement actual delete logic with confirmation
+     */
+    function deleteDevice() {
+        alert('Delete functionality simulated');
+    }
+
+    /**
+     * Navigates back to the device list
+     * TODO: Implement actual navigation
+     */
+    function goBack() {
+        alert('Back to list - simulated');
+    }
+
+    /* ============================================================
+       DEBUG / DEMO FUNCTIONS
+       ============================================================ */
+    
+    /**
+     * Resets demo data to initial state
+     * Call from browser console: resetDemoData()
+     */
+    window.resetDemoData = function() {
+        sensors = [
+            { id: 1, name: 'TWS Sensor A419', ip: '192.168.1.100', assignedTo: null },
+            { id: 2, name: 'TWS Sensor A058', ip: '192.168.1.101', assignedTo: 'Some Other Beacon TWS' },
+            { id: 3, name: 'TWS Sensor Dummy 1', ip: '192.168.1.102', assignedTo: 'Test Beacon TWS' }
+        ];
+        localStorage.setItem('projectTWSSensors', JSON.stringify(sensors));
+        populateSensorList();
+        alert('Demo data reset! Sensors reloaded with all 3 states.');
+    };
+
+    /* ============================================================
+       INITIALIZATION
+       ============================================================ */
+    
+    // Populate sensor list on page load
+    populateSensorList();
+    
+    // Close modals when clicking outside of them
+    window.onclick = function(event) {
+        const modals = document.getElementsByClassName('modal');
+        for (let modal of modals) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    };
+</script>
+</body>
+</html>
