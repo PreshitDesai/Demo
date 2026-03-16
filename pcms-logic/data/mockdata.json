@@ -1,0 +1,190 @@
+{
+  "devices": [
+    {
+      "id": 42, "name": "IH35 SB Split PC...", "deviceType": "pcms",
+      "description": "IH35 SB Split PC...", "deviceLabel": "IH35 SB Split PC...",
+      "latitude": 29.553921, "longitude": -98.351137,
+      "associatedSensors": [1, 2, 3, 5]
+    },
+    {
+      "id": 43, "name": "IH35 NB PCMS 2", "deviceType": "pcms",
+      "description": "IH35 SB Split PC...", "deviceLabel": "IH35 NB PCMS 2",
+      "latitude": 29.4544087, "longitude": -98.414519,
+      "associatedSensors": [6, 7, 8, 9]
+    },
+    {
+      "id": 44, "name": "IH35 NB PCMS 1", "deviceType": "pcms",
+      "description": "IH35 NB PCMS 1", "deviceLabel": "IH35 NB PCMS 1",
+      "latitude": 29.5085305, "longitude": -98.3978719,
+      "associatedSensors": [9, 10, 11, 12, 13]
+    },
+    {
+      "id": 45, "name": "IH410 PCMS 2", "deviceType": "pcms",
+      "description": "IH410 PCMS 2", "deviceLabel": "IH410 PCMS 2",
+      "latitude": 29.520332, "longitude": -98.514563,
+      "associatedSensors": [14, 15, 16, 17]
+    },
+    {
+      "id": 46, "name": "IH410 PCMS 1", "deviceType": "pcms",
+      "description": "IH410 PCMS 1", "deviceLabel": "IH410 PCMS 1",
+      "latitude": 29.515835, "longitude": -98.447751,
+      "associatedSensors": [17, 18, 19, 20, 21]
+    },
+    {
+      "id": 47, "name": "1604 EB PCMS 2", "deviceType": "pcms",
+      "description": "1604 EB PCMS 2", "deviceLabel": "1604 EB PCMS 2",
+      "latitude": 29.602375, "longitude": -98.443901,
+      "associatedSensors": [22, 23, 24, 25]
+    },
+    {
+      "id": 48, "name": "1604 EB PCMS 1", "deviceType": "pcms",
+      "description": "1604 EB PCMS 1", "deviceLabel": "1604 EB PCMS 1",
+      "latitude": 29.602323, "longitude": -98.379165,
+      "associatedSensors": [21, 25, 26, 27, 28, 29]
+    },
+    {
+      "id": 49, "name": "IH35 SB PCMS 2", "deviceType": "pcms",
+      "description": "IH35 SB PCMS 2", "deviceLabel": "IH35 SB PCMS 2",
+      "latitude": 29.6383629, "longitude": -98.2152927,
+      "associatedSensors": [30, 31, 32, 33]
+    },
+    {
+      "id": 50, "name": "IH35 SB PCMS 1", "deviceType": "pcms",
+      "description": "IH35 SB PCMS 1", "deviceLabel": "IH35 SB PCMS 1",
+      "latitude": 29.60392207, "longitude": -98.2729254,
+      "associatedSensors": [21, 33, 34, 35, 36, 37]
+    },
+    {
+      "id": 51, "name": "1604 WB PCMS 1", "deviceType": "pcms",
+      "description": "1604 WB PCMS 1", "deviceLabel": "1604 WB PCMS 1",
+      "latitude": 29.5222935, "longitude": -98.293528,
+      "associatedSensors": [38, 39, 40, 41]
+    },
+    {
+      "id": 73, "name": "ITS 12", "deviceType": "pcms",
+      "description": "ITS 12 PCMS", "deviceLabel": "ITS 12",
+      "latitude": 29.58923320, "longitude": -98.35041930,
+      "associatedSensors": [6, 13, 15]
+    },
+    {
+      "id": 74, "name": "ITS 15", "deviceType": "pcms",
+      "description": "ITS 15 PCMS", "deviceLabel": "ITS 15",
+      "latitude": 29.57621540, "longitude": -98.34027440,
+      "associatedSensors": [6, 14, 15]
+    },
+    {
+      "id": 75, "name": "ITS 16", "deviceType": "pcms",
+      "description": "ITS 16 PCMS", "deviceLabel": "ITS 16",
+      "latitude": 29.51689880, "longitude": -98.39682020,
+      "associatedSensors": [13, 14, 15]
+    },
+    {
+      "id": 76, "name": "ITS 17", "deviceType": "pcms",
+      "description": "ITS 17 PCMS", "deviceLabel": "ITS 17",
+      "latitude": 29.568550, "longitude": -98.335040,
+      "associatedSensors": [13, 14, 15]
+    },
+    {
+      "id": 77, "name": "ITS 19", "deviceType": "pcms",
+      "description": "ITS 19 PCMS", "deviceLabel": "ITS 19",
+      "latitude": 29.56985270, "longitude": -98.33060460,
+      "associatedSensors": [13, 14, 15]
+    },
+    {
+      "id": 78, "name": "ITS 20", "deviceType": "pcms",
+      "description": "ITS 20 PCMS", "deviceLabel": "ITS 20",
+      "latitude": 29.5848, "longitude": -98.3057,
+      "associatedSensors": [13, 14, 15]
+    },
+    {
+      "id": 79, "name": "ITS 18", "deviceType": "pcms",
+      "description": "ITS 18", "deviceLabel": "ITS 18",
+      "latitude": 29.51657910, "longitude": -98.39607960,
+      "associatedSensors": []
+    },
+    {
+      "id": 101, "name": "1604 EB Web Beacon 2", "deviceType": "webbeacon",
+      "associatedSensors": [22, 23, 24, 25]
+    },
+    {
+      "id": 102, "name": "1604 EB Web Beacon 1", "deviceType": "webbeacon",
+      "associatedSensors": [21, 25, 26, 27, 28, 29]
+    },
+    {
+      "id": 103, "name": "IH35 SB Web Beacon 2", "deviceType": "webbeacon",
+      "associatedSensors": [30, 31, 32, 33]
+    },
+    {
+      "id": 104, "name": "IH35 SB Web Beacon 1", "deviceType": "webbeacon",
+      "associatedSensors": [21, 33, 34, 35, 36, 37]
+    },
+    {
+      "id": 105, "name": "1604 WB Web Beacon 1", "deviceType": "webbeacon",
+      "associatedSensors": [38, 39, 40, 41]
+    }
+  ],
+  "sensors": [
+    { "id": 1, "name": "SB IH35 Split S1" },
+    { "id": 2, "name": "SB IH35 Split S2" },
+    { "id": 3, "name": "SB IH35 Split S3" },
+    { "id": 5, "name": "SB IH35 Split S4" },
+    { "id": 6, "name": "NB IH35 S8" },
+    { "id": 7, "name": "NB IH35 S7" },
+    { "id": 8, "name": "NB IH35 S6" },
+    { "id": 9, "name": "NB IH35 S5" },
+    { "id": 10, "name": "NB IH35 S4" },
+    { "id": 11, "name": "NB IH35 S3" },
+    { "id": 12, "name": "NB IH35 S2" },
+    { "id": 13, "name": "NB IH35 S1" },
+    { "id": 14, "name": "IH410 S8" },
+    { "id": 15, "name": "IH410 S7" },
+    { "id": 16, "name": "IH410 S6" },
+    { "id": 17, "name": "IH410 S5" },
+    { "id": 18, "name": "IH410 S4" },
+    { "id": 19, "name": "IH410 S3" },
+    { "id": 20, "name": "IH410 S2" },
+    { "id": 21, "name": "IH410 S1" },
+    { "id": 22, "name": "EB 1604 S8" },
+    { "id": 23, "name": "EB 1604 S7" },
+    { "id": 24, "name": "EB 1604 S6" },
+    { "id": 25, "name": "EB 1604 S5" },
+    { "id": 26, "name": "EB 1604 S4" },
+    { "id": 27, "name": "EB 1604 S3" },
+    { "id": 28, "name": "EB 1604 S2" },
+    { "id": 29, "name": "EB 1604 S1" },
+    { "id": 30, "name": "SB IH35 S8" },
+    { "id": 31, "name": "SB IH35 S7" },
+    { "id": 32, "name": "SB IH35 S6" },
+    { "id": 33, "name": "SB IH35 S5" },
+    { "id": 34, "name": "SB IH35 S4" },
+    { "id": 35, "name": "SB IH35 S3" },
+    { "id": 36, "name": "SB IH35 S2" },
+    { "id": 37, "name": "SB IH35 S1" },
+    { "id": 38, "name": "WB 1604 S4" },
+    { "id": 39, "name": "WB 1604 S3" },
+    { "id": 40, "name": "WB 1604 S2" },
+    { "id": 41, "name": "WB 1604 S1" },
+    { "id": 52, "name": "ITS 12 SB" },
+    { "id": 53, "name": "ITS 12 NB" },
+    { "id": 54, "name": "ITS 15 NB" },
+    { "id": 55, "name": "ITS 15 SB" },
+    { "id": 56, "name": "ITS 16 SB" },
+    { "id": 57, "name": "ITS 16 NB" },
+    { "id": 58, "name": "ITS 17 SB" },
+    { "id": 59, "name": "ITS 17 NB" },
+    { "id": 60, "name": "ITS 18 SB" },
+    { "id": 61, "name": "ITS 18 NB" },
+    { "id": 62, "name": "ITS 19 NB" },
+    { "id": 63, "name": "ITS 19 SB" },
+    { "id": 70, "name": "Temp Position 3" },
+    { "id": 71, "name": "ITS 20 NB" },
+    { "id": 80, "name": "Temp Position 2" }
+  ],
+  "metrics": [
+    { "id": 1, "name": "Speed", "value": "speed" },
+    { "id": 2, "name": "Travel Time", "value": "travel_time" },
+    { "id": 3, "name": "Speed (+ Bluetooth)", "value": "bt_speed" },
+    { "id": 4, "name": "Bluetooth Travel Time", "value": "bt_travel_time" },
+    { "id": 5, "name": "Lowest Speed at Any Sensor", "value": "speed_any" }
+  ]
+}

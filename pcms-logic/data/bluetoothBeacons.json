@@ -1,0 +1,12 @@
+[
+    {"id": 1, "name": "Beacon A - Mile 0.0", "mileMarker": 0.0},
+    {"id": 2, "name": "Beacon B - Mile 1.2", "mileMarker": 1.2},
+    {"id": 3, "name": "Beacon C - Mile 2.5", "mileMarker": 2.5},
+    {"id": 4, "name": "Beacon D - Mile 3.8", "mileMarker": 3.8},
+    {"id": 5, "name": "Beacon E - Mile 5.1", "mileMarker": 5.1},
+    {"id": 6, "name": "Beacon F - Mile 6.4", "mileMarker": 6.4},
+    {"id": 7, "name": "Beacon G - Mile 7.7", "mileMarker": 7.7},
+    {"id": 8, "name": "Beacon H - Mile 9.0", "mileMarker": 9.0},
+    {"id": 9, "name": "Beacon I - Mile 10.3", "mileMarker": 10.3},
+    {"id": 10, "name": "Beacon J - Mile 11.6", "mileMarker": 11.6}
+]

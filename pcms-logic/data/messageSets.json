@@ -1,0 +1,31 @@
+{
+  "messageSets": [
+    {
+      "msgSetId": 2,
+      "name": "Add ITS boards",
+      "type": "Currently Applied",
+      "date": "11/10/2022 11:05 AM",
+      "notes": "",
+      "appliedDate": "11/10/2022 11:0...",
+      "endAppliedDate": ""
+    },
+    {
+      "msgSetId": 1,
+      "name": "Initial Logic",
+      "type": "Previously Applied",
+      "date": "09/21/2022 11:38 AM",
+      "notes": "",
+      "appliedDate": "10/06/2022 01:4...",
+      "endAppliedDate": "11/10/2022 11:0..."
+    },
+    {
+      "msgSetId": 3,
+      "name": "Johnny Test",
+      "type": "Draft",
+      "date": "11/03/2025 06:49 PM",
+      "notes": "Draft Del...",
+      "appliedDate": "",
+      "endAppliedDate": ""
+    }
+  ]
+}

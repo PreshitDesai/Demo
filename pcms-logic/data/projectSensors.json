@@ -1,0 +1,279 @@
+{
+  "projectSensors": [
+    {
+      "id": 1,
+      "name": "SB IH35 Split S1",
+      "selected": true
+    },
+    {
+      "id": 2,
+      "name": "SB IH35 Split S2",
+      "selected": true
+    },
+    {
+      "id": 3,
+      "name": "SB IH35 Split S3",
+      "selected": true
+    },
+    {
+      "id": 5,
+      "name": "SB IH35 Split S4",
+      "selected": true
+    },
+    {
+      "id": 6,
+      "name": "NB IH35 S8",
+      "selected": false
+    },
+    {
+      "id": 7,
+      "name": "NB IH35 S7",
+      "selected": false
+    },
+    {
+      "id": 8,
+      "name": "NB IH35 S6",
+      "selected": false
+    },
+    {
+      "id": 9,
+      "name": "NB IH35 S5",
+      "selected": false
+    },
+    {
+      "id": 10,
+      "name": "NB IH35 S4",
+      "selected": false
+    },
+    {
+      "id": 11,
+      "name": "NB IH35 S3",
+      "selected": false
+    },
+    {
+      "id": 12,
+      "name": "NB IH35 S2",
+      "selected": false
+    },
+    {
+      "id": 13,
+      "name": "NB IH35 S1",
+      "selected": false
+    },
+    {
+      "id": 14,
+      "name": "IH410 S8",
+      "selected": false
+    },
+    {
+      "id": 15,
+      "name": "IH410 S7",
+      "selected": false
+    },
+    {
+      "id": 16,
+      "name": "IH410 S6",
+      "selected": false
+    },
+    {
+      "id": 17,
+      "name": "IH410 S5",
+      "selected": false
+    },
+    {
+      "id": 18,
+      "name": "IH410 S4",
+      "selected": false
+    },
+    {
+      "id": 19,
+      "name": "IH410 S3",
+      "selected": false
+    },
+    {
+      "id": 20,
+      "name": "IH410 S2",
+      "selected": false
+    },
+    {
+      "id": 21,
+      "name": "IH410 S1",
+      "selected": false
+    },
+    {
+      "id": 22,
+      "name": "EB 1604 S8",
+      "selected": false
+    },
+    {
+      "id": 23,
+      "name": "EB 1604 S7",
+      "selected": false
+    },
+    {
+      "id": 24,
+      "name": "EB 1604 S6",
+      "selected": false
+    },
+    {
+      "id": 25,
+      "name": "EB 1604 S5",
+      "selected": false
+    },
+    {
+      "id": 26,
+      "name": "EB 1604 S4",
+      "selected": false
+    },
+    {
+      "id": 27,
+      "name": "EB 1604 S3",
+      "selected": false
+    },
+    {
+      "id": 28,
+      "name": "EB 1604 S2",
+      "selected": false
+    },
+    {
+      "id": 29,
+      "name": "EB 1604 S1",
+      "selected": false
+    },
+    {
+      "id": 30,
+      "name": "SB IH35 S8",
+      "selected": false
+    },
+    {
+      "id": 31,
+      "name": "SB IH35 S7",
+      "selected": false
+    },
+    {
+      "id": 32,
+      "name": "SB IH35 S6",
+      "selected": false
+    },
+    {
+      "id": 33,
+      "name": "SB IH35 S5",
+      "selected": false
+    },
+    {
+      "id": 34,
+      "name": "SB IH35 S4",
+      "selected": false
+    },
+    {
+      "id": 35,
+      "name": "SB IH35 S3",
+      "selected": false
+    },
+    {
+      "id": 36,
+      "name": "SB IH35 S2",
+      "selected": false
+    },
+    {
+      "id": 37,
+      "name": "SB IH35 S1",
+      "selected": false
+    },
+    {
+      "id": 38,
+      "name": "WB 1604 S4",
+      "selected": false
+    },
+    {
+      "id": 39,
+      "name": "WB 1604 S3",
+      "selected": false
+    },
+    {
+      "id": 40,
+      "name": "WB 1604 S2",
+      "selected": false
+    },
+    {
+      "id": 41,
+      "name": "WB 1604 S1",
+      "selected": false
+    },
+    {
+      "id": 52,
+      "name": "ITS 12 SB",
+      "selected": false
+    },
+    {
+      "id": 53,
+      "name": "ITS 12 NB",
+      "selected": false
+    },
+    {
+      "id": 54,
+      "name": "ITS 15 NB",
+      "selected": false
+    },
+    {
+      "id": 55,
+      "name": "ITS 15 SB",
+      "selected": false
+    },
+    {
+      "id": 56,
+      "name": "ITS 16 SB",
+      "selected": false
+    },
+    {
+      "id": 57,
+      "name": "ITS 16 NB",
+      "selected": false
+    },
+    {
+      "id": 58,
+      "name": "ITS 17 SB",
+      "selected": false
+    },
+    {
+      "id": 59,
+      "name": "ITS 17 NB",
+      "selected": false
+    },
+    {
+      "id": 60,
+      "name": "ITS 18 SB",
+      "selected": false
+    },
+    {
+      "id": 61,
+      "name": "ITS 18 NB",
+      "selected": false
+    },
+    {
+      "id": 62,
+      "name": "ITS 19  NB",
+      "selected": false
+    },
+    {
+      "id": 63,
+      "name": "ITS 19  SB",
+      "selected": false
+    },
+    {
+      "id": 70,
+      "name": "Temp Position 3",
+      "selected": false
+    },
+    {
+      "id": 71,
+      "name": "ITS 20 NB",
+      "selected": false
+    },
+    {
+      "id": 80,
+      "name": "Temp Position 2",
+      "selected": false
+    }
+  ]
+}

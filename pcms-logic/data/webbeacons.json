@@ -1,0 +1,9 @@
+{
+  "webBeacons": [
+    { "id": 47, "name": "1604 EB Web Beacon 2", "associatedSensors": [22, 23, 24, 25] },
+    { "id": 48, "name": "1604 EB Web Beacon 1", "associatedSensors": [21, 25, 26, 27, 28, 29] },
+    { "id": 49, "name": "IH35 SB Web Beacon 2", "associatedSensors": [30, 31, 32, 33] },
+    { "id": 50, "name": "IH35 SB Web Beacon 1", "associatedSensors": [21, 33, 34, 35, 36, 37] },
+    { "id": 51, "name": "1604 WB Web Beacon 1", "associatedSensors": [38, 39, 40, 41] }
+  ]
+}

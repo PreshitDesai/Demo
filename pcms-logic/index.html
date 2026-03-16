@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logic Builder Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Overpass+Mono:wght@300..700&family=Overpass:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="master-app">
+    <!-- Master Tab Navigation -->
+    <nav class="master-tab-bar">
+        <div class="master-tab-bar-left">
+            <div class="master-app-brand">
+                <span class="material-symbols-outlined">automation</span>
+                <span class="master-app-title">Logic Builder</span>
+            </div>
+            <div class="master-tabs">
+                <button class="master-tab active" data-tab="pcms">
+                    <span class="material-symbols-outlined">assistant_on_hub</span>
+                    PCMS
+                </button>
+                <button class="master-tab" data-tab="bluetooth">
+                    <span class="material-symbols-outlined">bluetooth</span>
+                    Bluetooth Routes
+                </button>
+            </div>
+        </div>
+        <div class="master-tab-bar-right">
+            <!-- Placeholder for future global actions -->
+        </div>
+    </nav>
+
+    <!-- Tab Content Container -->
+    <div class="master-tab-content">
+        <!-- PCMS Tab Content -->
+        <div id="pcms-tab-content" class="tab-panel active">
+            <div class="app-container">
+                <!-- Header -->
+                <header class="app-header" id="app-header">
+                    <div class="header-title-section">
+                        <h1>PCMS Logic Builder</h1>
+
+                        <!-- Draft Mode Info (shown when editing a draft) -->
+                        <div class="header-draft-info">
+                            <span class="header-draft-badge">EDITING DRAFT</span>
+                            <span id="header-draft-name" class="header-draft-name"></span>
+                            <span id="header-draft-based-on" class="header-draft-based-on"></span>
+                        </div>
+
+                        <!-- History Mode Info (shown when viewing project history) -->
+                        <div class="header-history-info">
+                            <span class="header-history-badge">VIEWING HISTORY</span>
+                            <span id="header-history-name" class="header-history-name"></span>
+                        </div>
+                    </div>
+
+                    <!-- Default Actions (hidden in special modes) -->
+                    <div class="header-default-actions">
+                        <button id="dev-mode-toggle" class="btn-secondary">Show PCMS Code</button>
+                    </div>
+
+                    <!-- Draft Mode Actions -->
+                    <div class="header-draft-actions">
+                        <button onclick="app.saveDraftState()" class="btn-save-draft">Save Draft</button>
+                        <button onclick="app.discardDraft()" class="btn-discard">Discard</button>
+                        <button onclick="app.showSaveVersionDialog()" class="btn-set-live">Set to Live</button>
+                    </div>
+
+                    <!-- History Mode Actions (placeholder for consistency) -->
+                    <div class="header-history-actions"></div>
+                </header>
+
+
+                <!-- Main Content Area -->
+                <div class="main-content">
+                    <!-- Vertical Tab Bar (Left Edge) -->
+                    <div class="vertical-tab-bar">
+                        <button id="toggle-home" class="tab-button active" title="Home">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f">
+                                <path d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z"/>
+                            </svg>
+                            <span class="tab-label">Home</span>
+                        </button>
+                        <button id="toggle-devices" class="tab-button" title="Toggle Devices">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f">
+                                <path d="M480-480Zm320 320H600q0-20-1.5-40t-4.5-40h206v-480H160v46q-20-3-40-4.5T80-680v-40q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160Zm-720 0v-120q50 0 85 35t35 85H80Zm200 0q0-83-58.5-141.5T80-360v-80q117 0 198.5 81.5T360-160h-80Zm160 0q0-75-28.5-140.5t-77-114q-48.5-48.5-114-77T80-520v-80q91 0 171 34.5T391-471q60 60 94.5 140T520-160h-80Z"/>
+                            </svg>
+                            <span class="tab-label">Devices</span>
+                        </button>
+                    </div>
+
+                    <!-- Project History Panel - Hidden, now on homepage -->
+                    <aside id="project-history-panel" class="side-panel collapsed hidden"></aside>
+
+                    <!-- Drafts Panel - Hidden, now on homepage -->
+                    <aside id="message-sets-panel" class="side-panel collapsed hidden"></aside>
+
+                    <!-- Devices Panel -->
+                    <aside id="devices-panel" class="side-panel">
+                        <div class="panel-content">
+                            <div class="device-group">
+                                <h3 class="device-group-header">PCMS Devices</h3>
+                                <div id="device-list" class="device-list">
+                                    <!-- PCMS device buttons will be populated here -->
+                                </div>
+                            </div>
+                            <div class="device-group">
+                                <h3 class="device-group-header">Web Beacons</h3>
+                                <div id="web-beacon-list" class="device-list">
+                                    <!-- Web beacon buttons will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Homepage (Initial landing page) -->
+                    <section id="homepage" class="homepage">
+                        <div class="homepage-content">
+                            <!-- Project History Column -->
+                            <div class="homepage-column">
+                                <div class="homepage-column-header">
+                                    <h3>Project History</h3>
+                                    <span class="homepage-column-count" id="homepage-history-count">0 entries</span>
+                                </div>
+                                <div id="homepage-history-list" class="homepage-card-list">
+                                    <!-- History cards will be rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Drafts Column -->
+                            <div class="homepage-column">
+                                <div class="homepage-column-header">
+                                    <h3>Drafts</h3>
+                                    <div class="homepage-draft-buttons">
+                                        <button id="homepage-new-draft-btn" class="btn-small-primary">+ New Blank</button>
+                                        <button id="homepage-draft-from-existing-btn" class="btn-small-secondary">From Existing</button>
+                                    </div>
+                                </div>
+                                <div id="homepage-drafts-list" class="homepage-card-list">
+                                    <!-- Draft cards will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Logic Builder (Center) -->
+                    <section class="logic-builder hidden">
+                        <!-- Draft Overview (shown when editing a draft - birds eye view) -->
+                        <div id="draft-overview" class="draft-overview hidden">
+                            <div class="draft-overview-header">
+                                <div class="draft-overview-title">
+                                    <div class="draft-name-row">
+                                        <h2 id="draft-overview-name" class="draft-overview-name"></h2>
+                                        <button onclick="app.renameDraft()" class="btn-rename-draft" title="Rename draft">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+                                                <path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <p id="draft-overview-based-on" class="draft-overview-subtitle"></p>
+                                </div>
+                                <div class="draft-overview-controls">
+                                    <div class="draft-overview-stats">
+                                        <span id="overview-total-devices" class="overview-stat"></span>
+                                    </div>
+                                    <div class="draft-expand-controls">
+                                        <button onclick="app.expandAllDraftDevices()" class="btn-expand-collapse">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
+                                                <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/>
+                                            </svg>
+                                            Expand All
+                                        </button>
+                                        <button onclick="app.collapseAllDraftDevices()" class="btn-expand-collapse">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
+                                                <path d="M440-440v184l-57-57-56 57-207-207 56-57 57 57v-184h207v80H281l159 159v-32h80Zm80-80v-80h159L520-759l57-57 207 207-57 57-56-57v184h-80v-127l-159 159v32h-80Z"/>
+                                            </svg>
+                                            Collapse All
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="draft-overview-devices" class="draft-overview-devices">
+                                <!-- Device cards will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Device Edit View (hidden when in overview mode) -->
+                        <div id="device-edit-view" class="device-edit-view">
+                            <!-- Unified Device Toolbar -->
+                            <div id="device-toolbar" class="device-toolbar">
+                                <button id="btn-back-overview" onclick="app.showDraftOverview()" class="btn-back-overview hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+                                        <path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/>
+                                    </svg>
+                                    All Devices
+                                </button>
+                                <select id="main-device-select" class="main-device-select">
+                                    <option value="">Select Device...</option>
+                                </select>
+                                <button id="add-rule-btn" class="btn-primary" disabled>+ Add Rule</button>
+                                <button id="edit-view-dev-mode-toggle" class="btn-dev-mode-toolbar" onclick="app.toggleDevMode()">Show PCMS Code</button>
+                            </div>
+
+                        <!-- Selected Sensors Accordion -->
+                        <div id="sensors-accordion" class="sensors-accordion">
+                            <div class="sensors-accordion-header" id="sensors-accordion-toggle">
+                                <span class="sensors-accordion-label">Selected Sensors:</span>
+                                <span id="sensors-accordion-summary" class="sensors-accordion-summary">No sensors selected</span>
+                                <svg class="sensors-accordion-chevron" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+                                    <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
+                                </svg>
+                            </div>
+                            <div id="sensors-accordion-content" class="sensors-accordion-content collapsed">
+                                <div id="sensors-accordion-list" class="sensors-accordion-list">
+                                    <!-- Sensors will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-header">
+                            <div class="section-tabs">
+                                <button class="section-tab active" data-tab="rules">Logic</button>
+                            </div>
+                            <div class="section-actions">
+                                <label class="display-option-checkbox">
+                                    <input type="checkbox" id="threshold-first-toggle">
+                                    <span>Show threshold first</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Rules Tab Content -->
+                        <div id="rules-tab" class="tab-content active">
+                            <div id="rules-container" class="rules-container">
+                                <div class="empty-state">
+                                    <p>Select a device to begin creating logic rules</p>
+                                </div>
+                            </div>
+
+                            <!-- Fallback Message Section (inline, shown when bluetooth rules exist) -->
+                            <div id="fallback-section" class="fallback-section hidden">
+                                <div class="overview-section-header fallback-section-header">Fallback Message</div>
+                                <div id="fallback-content" class="fallback-card">
+                                    <!-- Rendered by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Developer Mode Output -->
+                            <div id="dev-output" class="dev-output hidden">
+                                <h3>Developer Output</h3>
+                                <div class="output-section">
+                                    <h4>Individual Rules:</h4>
+                                    <pre id="rules-output"></pre>
+                                </div>
+                                <div class="output-section">
+                                    <h4>Final Concatenated Logic:</h4>
+                                    <pre id="final-output"></pre>
+                                </div>
+                            </div>
+                        </div>
+                        </div><!-- End device-edit-view -->
+
+                    </section>
+
+                    <!-- Message Set Viewer -->
+                    <section id="message-set-viewer" class="message-set-viewer hidden">
+                        <div class="message-set-viewer-header">
+                            <div class="message-set-viewer-title">
+                                <h2 id="message-set-viewer-name">Message Set</h2>
+                            </div>
+                            <div class="message-set-viewer-actions">
+                                <label class="display-option-checkbox viewer-checkbox">
+                                    <input type="checkbox" id="viewer-threshold-first-toggle">
+                                    <span>Show threshold first</span>
+                                </label>
+                                <button onclick="app.copyVersionToDraft()" class="btn-copy-version">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+                                        <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+                                    </svg>
+                                    Copy to Draft
+                                </button>
+                                <button id="apply-version-btn" onclick="app.showApplyConfirmation()" class="btn-apply-version">
+                                    Apply This Version
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="message-set-viewer-body">
+                            <!-- Version List Sidebar -->
+                            <div class="version-list-panel">
+                                <h3>Versions</h3>
+                                <div id="version-list" class="version-list">
+                                    <!-- Version items rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Version Details -->
+                            <div class="version-details-panel">
+                                <div class="version-details-header">
+                                    <div class="version-details-info">
+                                        <span id="viewing-version-number" class="viewing-version-number">v1</span>
+                                        <span id="viewing-version-date" class="viewing-version-date"></span>
+                                    </div>
+                                    <div id="viewing-version-notes" class="viewing-version-notes"></div>
+                                    <div class="version-expand-controls">
+                                        <button onclick="app.expandAllHistoryDevices()" class="btn-expand-collapse">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
+                                                <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/>
+                                            </svg>
+                                            Expand All
+                                        </button>
+                                        <button onclick="app.collapseAllHistoryDevices()" class="btn-expand-collapse">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
+                                                <path d="M440-440v184l-57-57-56 57-207-207 56-57 57 57v-184h207v80H281l159 159v-32h80Zm80-80v-80h159L520-759l57-57 207 207-57 57-56-57v184h-80v-127l-159 159v32h-80Z"/>
+                                            </svg>
+                                            Collapse All
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="version-devices-content" class="version-devices-content">
+                                    <!-- Device rules rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Apply Confirmation Modal -->
+                <div id="apply-confirmation-modal" class="modal-overlay hidden">
+                    <div class="modal-content">
+                        <h3>Apply Message Set?</h3>
+                        <div class="modal-body">
+                            <p>You are about to apply:</p>
+                            <div class="apply-summary">
+                                <strong id="apply-modal-name"></strong>
+                                <span id="apply-modal-version"></span>
+                            </div>
+                            <p class="apply-notes" id="apply-modal-notes"></p>
+                            <p class="apply-warning">This will update <strong id="apply-modal-devices"></strong>.</p>
+                        </div>
+                        <div class="modal-actions">
+                            <button onclick="app.cancelApplyVersion()" class="btn-modal-cancel">Cancel</button>
+                            <button onclick="app.confirmApplyVersion()" class="btn-modal-confirm">Apply to All Devices</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Set to Live Modal -->
+                <div id="save-version-modal" class="modal-overlay hidden">
+                    <div class="modal-content">
+                        <h3 id="save-version-title">Set to Live</h3>
+                        <div class="modal-body">
+                            <p id="save-version-context" class="save-context"></p>
+                            <div class="form-group">
+                                <label for="save-version-name">Name</label>
+                                <input type="text" id="save-version-name" class="form-input" />
+                            </div>
+                            <div class="form-group">
+                                <label for="save-version-notes">Description <span class="required">*</span></label>
+                                <textarea id="save-version-notes" class="form-textarea" rows="3" placeholder="Describe this configuration..."></textarea>
+                                <span class="form-hint">This helps identify configurations later</span>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button onclick="app.cancelSaveVersion()" class="btn-modal-cancel">Cancel</button>
+                            <button onclick="app.confirmSaveVersion()" class="btn-modal-confirm">Set to Live</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Draft From Existing Modal -->
+                <div id="draft-from-existing-modal" class="modal-overlay hidden">
+                    <div class="modal-content modal-content-wide">
+                        <h3>Create Draft from Existing</h3>
+                        <div class="modal-body">
+                            <p>Select a project history entry to copy:</p>
+                            <div id="existing-entries-list" class="existing-entries-list">
+                                <!-- Entries will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button onclick="app.cancelDraftFromExisting()" class="btn-modal-cancel">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BT Display Line Warning Modal -->
+                <div id="bt-char-warning-modal" class="modal-overlay hidden">
+                    <div class="modal-content">
+                        <h3>Heads Up — Display Space is Tight</h3>
+                        <div class="modal-body">
+                            <p>Each display line can show <strong>8 characters total</strong>. A Bluetooth route value will use <strong>2–3 of those characters</strong> depending on conditions.</p>
+                            <p>Your text in the highlighted field may not have enough room to display along with the route value.</p>
+                            <p><strong>What you can do:</strong> Shorten your text to <strong>6 characters or fewer</strong>, or add another rule to handle the longer value.</p>
+                        </div>
+                        <div class="modal-actions">
+                            <button id="bt-char-warn-ok" class="btn-modal-confirm">Got It</button>
+                            <button id="bt-char-warn-add-rule" class="btn-modal-cancel">+ Add Rule</button>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Bluetooth Routes Tab Content -->
+        <div id="bluetooth-tab-content" class="tab-panel">
+            <div class="bt-tab-container">
+                <div class="bt-tab-header">
+                    <h2>Bluetooth Routes</h2>
+                    <p class="bt-tab-subtitle">Manage bluetooth routes as data sources for BT Speed and BT Travel Time metrics.</p>
+                </div>
+                <div class="bt-tab-body">
+                    <div id="bt-create-form-container" class="bt-section">
+                        <h3>Create New Route</h3>
+                        <!-- Form rendered by BluetoothRouteManager -->
+                    </div>
+                    <div class="bt-section">
+                        <h3>Routes</h3>
+                        <div id="bt-route-list" class="bt-route-list">
+                            <!-- Route cards rendered by BluetoothRouteManager -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="bluetooth-app.js"></script>
+<script src="master-app.js"></script>
+<script src="panel-toggle.js"></script>
+<script src="RuleComponent.js"></script>
+<script src="HistoryEntryComponent.js"></script>
+<script src="sample-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

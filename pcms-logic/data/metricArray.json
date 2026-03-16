@@ -1,0 +1,19 @@
+{
+  "metrics": [
+    {
+      "id": 0,
+      "name": "Select -",
+      "value": "select"
+    },
+    {
+      "id": 1,
+      "name": "Speed",
+      "value": "speed"
+    },
+    {
+      "id": 2,
+      "name": "Travel Time",
+      "value": "travel_time"
+    }
+  ]
+}
