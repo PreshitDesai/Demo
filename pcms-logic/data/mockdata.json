@@ -183,8 +183,8 @@
   "metrics": [
     { "id": 1, "name": "Speed", "value": "speed" },
     { "id": 2, "name": "Travel Time", "value": "travel_time" },
+    { "id": 5, "name": "Lowest Speed at Any Sensor", "value": "speed_any" },
     { "id": 3, "name": "Speed (+ Bluetooth)", "value": "bt_speed" },
-    { "id": 4, "name": "Bluetooth Travel Time", "value": "bt_travel_time" },
-    { "id": 5, "name": "Lowest Speed at Any Sensor", "value": "speed_any" }
+    { "id": 4, "name": "Bluetooth Travel Time", "value": "bt_travel_time" }    
   ]
 }
