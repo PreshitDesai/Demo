@@ -718,7 +718,11 @@ class RuleComponent {
     }
 
     renderMetricOptions() {
-        return this.app.data.metrics.map(metric => {
+        const webBeaconMetrics = ['speed', 'speed_any'];
+        const metrics = this.app.currentDeviceType === 'webbeacon'
+            ? this.app.data.metrics.filter(m => webBeaconMetrics.includes(m.value))
+            : this.app.data.metrics;
+        return metrics.map(metric => {
             const selected = this.rule.metric == metric.id ? 'selected' : '';
             return `<option value="${metric.id}" ${selected}>${metric.name}</option>`;
         }).join('');
