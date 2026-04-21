@@ -1971,13 +1971,14 @@ body {
     text-align: center;
 }
 
-/* Specific widths for selectors in row layout */
-.rule-selectors .metric-select {
-    width: 110px;
-}
-
-.rule-selectors .sensor-select {
-    width: 140px;
+/* Selector widths auto-size to fit the longest <option> label.
+   `min-width: max-content` grows the select to match its widest option,
+   so adding new metrics / sensors / operators needs no CSS change. */
+.rule-selectors .metric-select,
+.rule-selectors .sensor-select,
+.rule-selectors .operator-select {
+    width: auto;
+    min-width: max-content;
 }
 
     .rule-selectors .sensor-select.sensor-disabled {
@@ -1985,10 +1986,6 @@ body {
         cursor: not-allowed;
         background: #f0f0f0;
     }
-
-.rule-selectors .operator-select {
-    width: 100px;
-}
 
 .rule-selectors .threshold-input {
     width: 30px;
@@ -2033,7 +2030,9 @@ body {
     text-align: center;
     font-size: 12px;
     padding: 6px 8px;
-    width: 80px;
+    /* Widened to fit a pill chip label (e.g. "Route1 TT") plus up to 8 chars of typed text
+       without truncating either. */
+    width: 180px;
 }
 
     .screen-line-inline:disabled {
@@ -3097,6 +3096,7 @@ body {
 .pill {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
     padding: 5px 8px 2px;
     border-radius: 12px;
     font-size: 11px;
