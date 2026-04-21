@@ -203,67 +203,106 @@
                                 <select id="main-device-select" class="main-device-select">
                                     <option value="">Select Device...</option>
                                 </select>
-                                <button id="add-rule-btn" class="btn-primary" disabled>+ Add Rule</button>
-                                <button id="edit-view-dev-mode-toggle" class="btn-dev-mode-toolbar" onclick="app.toggleDevMode()">Show PCMS Code</button>
+                                                                <button id="add-rule-btn" class="btn-primary" disabled>+ Add Rule</button>
                             </div>
 
-                        <!-- Selected Sensors Accordion -->
-                        <div id="sensors-accordion" class="sensors-accordion">
-                            <div class="sensors-accordion-header" id="sensors-accordion-toggle">
-                                <span class="sensors-accordion-label">Selected Sensors and Bluetooth Routes:</span>
-                                <span id="sensors-accordion-summary" class="sensors-accordion-summary">No sensors selected</span>
-                                <svg class="sensors-accordion-chevron" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-                                    <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"/>
-                                </svg>
-                            </div>
-                            <div id="sensors-accordion-content" class="sensors-accordion-content collapsed">
-                                <div id="sensors-accordion-list" class="sensors-accordion-list">
-                                    <!-- Sensors will be populated here -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section-header">
-                            <div class="section-tabs">
-                                <button class="section-tab active" data-tab="rules">Logic</button>
-                            </div>
-                            <div class="section-actions">
+                            <!-- Second Travel Time Toggle -->
+                            <div class="accordion-controls">
                                 <label class="display-option-checkbox">
-                                    <input type="checkbox" id="threshold-first-toggle">
-                                    <span>Show threshold first</span>
+                                    <input type="checkbox" id="show-sensors-2-toggle">
+                                    <span>Show Sensors for Second Travel Time</span>
                                 </label>
                             </div>
-                        </div>
 
-                        <!-- Rules Tab Content -->
-                        <div id="rules-tab" class="tab-content active">
-                            <div id="rules-container" class="rules-container">
-                                <div class="empty-state">
-                                    <p>Select a device to begin creating logic rules</p>
+                            <!-- Accordion 1: Selected Sensors 1 -->
+                            <div id="sensors-accordion-1" class="sensors-accordion">
+                                <div class="sensors-accordion-header" id="sensors-accordion-1-toggle">
+                                    <span class="sensors-accordion-label">Selected Sensors 1:</span>
+                                    <span id="sensors-accordion-1-summary" class="sensors-accordion-summary">No sensors selected</span>
+                                    <svg class="sensors-accordion-chevron" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+                                        <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+                                    </svg>
+                                </div>
+                                <div id="sensors-accordion-1-content" class="sensors-accordion-content collapsed">
+                                    <div id="sensors-accordion-1-list" class="sensors-accordion-list">
+                                        <!-- Sensors will be populated here -->
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Fallback Message Section (inline, shown when bluetooth rules exist) -->
-                            <div id="fallback-section" class="fallback-section hidden">
-                                <div class="overview-section-header fallback-section-header">Fallback Message</div>
-                                <div id="fallback-content" class="fallback-card">
-                                    <!-- Rendered by JS -->
+                            <!-- Accordion 2: Selected Sensors 2 (shown when "Show Sensors for Second Travel Time" is checked) -->
+                            <div id="sensors-accordion-2" class="sensors-accordion hidden">
+                                <div class="sensors-accordion-header" id="sensors-accordion-2-toggle">
+                                    <span class="sensors-accordion-label">Selected Sensors 2:</span>
+                                    <span id="sensors-accordion-2-summary" class="sensors-accordion-summary">No sensors selected</span>
+                                    <svg class="sensors-accordion-chevron" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+                                        <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+                                    </svg>
+                                </div>
+                                <div id="sensors-accordion-2-content" class="sensors-accordion-content collapsed">
+                                    <div id="sensors-accordion-2-list" class="sensors-accordion-list">
+                                        <!-- Sensors will be populated here -->
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Developer Mode Output -->
-                            <div id="dev-output" class="dev-output hidden">
-                                <h3>Developer Output</h3>
-                                <div class="output-section">
-                                    <h4>Individual Rules:</h4>
-                                    <pre id="rules-output"></pre>
+                            <!-- Accordion 3: Bluetooth Routes -->
+                            <div id="sensors-accordion-3" class="sensors-accordion">
+                                <div class="sensors-accordion-header" id="sensors-accordion-3-toggle">
+                                    <span class="sensors-accordion-label">Bluetooth Routes:</span>
+                                    <span id="sensors-accordion-3-summary" class="sensors-accordion-summary">No routes selected</span>
+                                    <svg class="sensors-accordion-chevron" xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+                                        <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+                                    </svg>
                                 </div>
-                                <div class="output-section">
-                                    <h4>Final Concatenated Logic:</h4>
-                                    <pre id="final-output"></pre>
+                                <div id="sensors-accordion-3-content" class="sensors-accordion-content collapsed">
+                                    <div id="sensors-accordion-3-list" class="sensors-accordion-list">
+                                        <!-- Bluetooth routes will be populated here -->
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <div class="section-header">
+                                <div class="section-tabs">
+                                    <button class="section-tab active" data-tab="rules">Logic</button>
+                                </div>
+                                <div class="section-actions">
+                                    <label class="display-option-checkbox">
+                                        <input type="checkbox" id="pcms-code-toggle">
+                                        <span>Show PCMS code</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Rules Tab Content -->
+                            <div id="rules-tab" class="tab-content active">
+                                <div id="rules-container" class="rules-container">
+                                    <div class="empty-state">
+                                        <p>Select a device to begin creating logic rules</p>
+                                    </div>
+                                </div>
+
+                                <!-- Fallback Message Section (inline, shown when bluetooth rules exist) -->
+                                <div id="fallback-section" class="fallback-section hidden">
+                                    <div class="overview-section-header fallback-section-header">Fallback Message</div>
+                                    <div id="fallback-content" class="fallback-card">
+                                        <!-- Rendered by JS -->
+                                    </div>
+                                </div>
+
+                                <!-- Developer Mode Output -->
+                                <div id="dev-output" class="dev-output hidden">
+                                    <h3>Developer Output</h3>
+                                    <div class="output-section">
+                                        <h4>Individual Rules:</h4>
+                                        <pre id="rules-output"></pre>
+                                    </div>
+                                    <div class="output-section">
+                                        <h4>Final Concatenated Logic:</h4>
+                                        <pre id="final-output"></pre>
+                                    </div>
+                                </div>
+                            </div>
                         </div><!-- End device-edit-view -->
 
                     </section>
@@ -281,7 +320,7 @@
                                 </label>
                                 <button onclick="app.copyVersionToDraft()" class="btn-copy-version">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
-                                        <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+                                        <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z" />
                                     </svg>
                                     Copy to Draft
                                 </button>
@@ -311,13 +350,13 @@
                                     <div class="version-expand-controls">
                                         <button onclick="app.expandAllHistoryDevices()" class="btn-expand-collapse">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
-                                                <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/>
+                                                <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z" />
                                             </svg>
                                             Expand All
                                         </button>
                                         <button onclick="app.collapseAllHistoryDevices()" class="btn-expand-collapse">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
-                                                <path d="M440-440v184l-57-57-56 57-207-207 56-57 57 57v-184h207v80H281l159 159v-32h80Zm80-80v-80h159L520-759l57-57 207 207-57 57-56-57v184h-80v-127l-159 159v32h-80Z"/>
+                                                <path d="M440-440v184l-57-57-56 57-207-207 56-57 57 57v-184h207v80H281l159 159v-32h80Zm80-80v-80h159L520-759l57-57 207 207-57 57-56-57v184h-80v-127l-159 159v32h-80Z" />
                                             </svg>
                                             Collapse All
                                         </button>
@@ -375,37 +414,81 @@
                 </div>
             </div>
 
-                <!-- Draft From Existing Modal -->
-                <div id="draft-from-existing-modal" class="modal-overlay hidden">
-                    <div class="modal-content modal-content-wide">
-                        <h3>Create Draft from Existing</h3>
-                        <div class="modal-body">
-                            <p>Select a project history entry to copy:</p>
-                            <div id="existing-entries-list" class="existing-entries-list">
-                                <!-- Entries will be rendered here -->
-                            </div>
+            <!-- Bulk Sensor Removal Modal (triggered when hiding Selected Sensors 2 while it still has sensors) -->
+            <div id="sensor-bulk-removal-modal" class="modal-overlay hidden">
+                <div class="modal-content modal-content-wide">
+                    <h3>It looks like you're trying to hide Selected Sensors 2.</h3>
+                    <div class="modal-body">
+                        <p>Choose which sensors to remove. Sensors referenced by rules can only leave once their rules are cleared.</p>
+                        <div class="sensor-removal-list-actions">
+                            <button type="button" class="btn-link-inline" onclick="app.toggleSensorBulkAll(true)">Select all</button>
+                            <span class="sensor-removal-sep">·</span>
+                            <button type="button" class="btn-link-inline" onclick="app.toggleSensorBulkAll(false)">Select none</button>
                         </div>
-                        <div class="modal-actions">
-                            <button onclick="app.cancelDraftFromExisting()" class="btn-modal-cancel">Cancel</button>
+                        <div id="sensor-bulk-removal-list" class="sensor-bulk-removal-list">
+                            <!-- Populated when opened -->
                         </div>
                     </div>
+                    <div class="modal-actions">
+                        <button onclick="app.closeSensorBulkRemovalModal()" class="btn-modal-cancel">Cancel</button>
+                        <button onclick="app.confirmSensorBulkRemoval()" class="btn-modal-confirm">Remove Selected</button>
+                    </div>
                 </div>
+            </div>
 
-                <!-- BT Display Line Warning Modal -->
-                <div id="bt-char-warning-modal" class="modal-overlay hidden">
-                    <div class="modal-content">
-                        <h3>Heads Up — Display Space is Tight</h3>
-                        <div class="modal-body">
-                            <p>Each display line can show <strong>8 characters total</strong>. A Bluetooth route value will use <strong>2–3 of those characters</strong> depending on conditions.</p>
-                            <p>Your text in the highlighted field may not have enough room to display along with the route value.</p>
-                            <p><strong>What you can do:</strong> Shorten your text to <strong>6 characters or fewer</strong>, or add another rule to handle the longer value.</p>
+            <!-- Sensor Removal Modal -->
+            <div id="sensor-removal-modal" class="modal-overlay hidden">
+                <div class="modal-content modal-content-wide">
+                    <h3>It looks like you're trying to remove a sensor that has logic.</h3>
+                    <div class="modal-body">
+                        <p>Please review the following rules.</p>
+                        <div class="sensor-removal-list-actions">
+                            <button type="button" class="btn-link-inline" onclick="app.toggleSensorRemovalAllCheckboxes(true)">Select all</button>
+                            <span class="sensor-removal-sep">·</span>
+                            <button type="button" class="btn-link-inline" onclick="app.toggleSensorRemovalAllCheckboxes(false)">Select none</button>
                         </div>
-                        <div class="modal-actions">
-                            <button id="bt-char-warn-ok" class="btn-modal-confirm">Got It</button>
-                            <button id="bt-char-warn-add-rule" class="btn-modal-cancel">+ Add Rule</button>
+                        <div id="sensor-removal-rule-list" class="sensor-removal-rule-list">
+                            <!-- Populated when opened -->
                         </div>
                     </div>
+                    <div class="modal-actions">
+                        <button onclick="app.closeSensorRemovalModal()" class="btn-modal-cancel">Cancel</button>
+                        <button onclick="app.confirmSensorRemoval()" class="btn-modal-confirm">Remove from Selected</button>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Draft From Existing Modal -->
+            <div id="draft-from-existing-modal" class="modal-overlay hidden">
+                <div class="modal-content modal-content-wide">
+                    <h3>Create Draft from Existing</h3>
+                    <div class="modal-body">
+                        <p>Select a project history entry to copy:</p>
+                        <div id="existing-entries-list" class="existing-entries-list">
+                            <!-- Entries will be rendered here -->
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button onclick="app.cancelDraftFromExisting()" class="btn-modal-cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BT Display Line Warning Modal -->
+            <div id="bt-char-warning-modal" class="modal-overlay hidden">
+                <div class="modal-content">
+                    <h3>Heads Up — Display Space is Tight</h3>
+                    <div class="modal-body">
+                        <p>Each display line can show <strong>8 characters total</strong>. A Bluetooth route value will use <strong>2–3 of those characters</strong> depending on conditions.</p>
+                        <p>Your text in the highlighted field may not have enough room to display along with the route value.</p>
+                        <p><strong>What you can do:</strong> Shorten your text to <strong>6 characters or fewer</strong>, or add another rule to handle the longer value.</p>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="bt-char-warn-ok" class="btn-modal-confirm">Got It</button>
+                        <button id="bt-char-warn-add-rule" class="btn-modal-cancel">+ Add Rule</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Bluetooth Routes Tab Content -->
@@ -432,7 +515,6 @@
 
     </div>
 </div>
-
 <script src="bluetooth-app.js"></script>
 <script src="master-app.js"></script>
 <script src="panel-toggle.js"></script>
