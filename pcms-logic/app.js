@@ -25,6 +25,12 @@ class PCMSApp {
 
         // Display preferences
         this.showThresholdFirst = localStorage.getItem('pcms_threshold_first') === 'true';
+        // Second Travel Time is opt-in per session; always starts unchecked.
+        this.showSensorsForSecondTravelTime = false;
+        localStorage.removeItem('pcms_show_sensors_2');
+
+        // Expanded state per accordion (1 = regular sensors, 2 = regular sensors #2, 3 = bluetooth routes)
+        this.sensorsAccordionExpanded = { 1: false, 2: false, 3: false };
 
         this.init();
     }
@@ -287,6 +293,7 @@ class PCMSApp {
         this.data.devices.forEach(device => {
             if (deviceConfigs[device.deviceNumber]) {
                 device.associatedSensors = deviceConfigs[device.deviceNumber].associatedSensors;
+                device.associatedSensors2 = deviceConfigs[device.deviceNumber].associatedSensors2 || [];
             }
         });
     }
@@ -294,6 +301,7 @@ class PCMSApp {
     async loadData() {
         try {
             const data = await fetch('./data/mockdata.json').then(r => r.json());
+            //const data = await this.loadDevices();
 
             // Add backwards-compatible aliases to all devices
             data.devices.forEach(d => {
@@ -311,6 +319,29 @@ class PCMSApp {
             this.loadFallbackData();
         }
     }
+    //async loadDevices() {
+    //    try {
+    //        const response = await fetch(`/LogicSet?handler=LoadDevices&projectId=${encodeURIComponent(ProjectName)}`, {
+    //            method: 'GET',
+    //            headers: {
+    //                'Accept': 'application/json'
+    //            }
+    //        });
+
+    //        if (!response.ok) {
+    //            throw new Error("Server returned " + response.status);
+    //        }
+
+    //        const data = await response.json();
+    //        console.log("Devices loaded:", data.devices);
+
+    //        //this.devices = data.devices;
+    //        return data;
+    //    } catch (err) {
+    //        console.error("Could not load devices:", err);
+    //    }
+    //}
+
 
     loadFallbackData() {
         // Fallback data for when JSON can't be loaded (e.g., file:// protocol)
@@ -384,13 +415,37 @@ class PCMSApp {
             this.toggleDevMode();
         });
 
-        // Threshold first toggle
-        const thresholdToggle = document.getElementById('threshold-first-toggle');
-        if (thresholdToggle) {
-            thresholdToggle.checked = this.showThresholdFirst;
-            thresholdToggle.addEventListener('change', (e) => {
-                this.showThresholdFirst = e.target.checked;
-                localStorage.setItem('pcms_threshold_first', this.showThresholdFirst);
+        // PCMS code toggle (replaces the old "threshold first" checkbox)
+        const pcmsCodeToggle = document.getElementById('pcms-code-toggle');
+        if (pcmsCodeToggle) {
+            pcmsCodeToggle.checked = this.devMode;
+            pcmsCodeToggle.addEventListener('change', () => {
+                this.toggleDevMode();
+            });
+        }
+
+        // Show Sensors for Second Travel Time toggle
+        const showSensors2Toggle = document.getElementById('show-sensors-2-toggle');
+        if (showSensors2Toggle) {
+            showSensors2Toggle.checked = this.showSensorsForSecondTravelTime;
+            this.applySecondSensorsVisibility();
+            showSensors2Toggle.addEventListener('change', (e) => {
+                // Hide attempt while list 2 still has sensors: defer to the bulk-removal
+                // modal, which lets the user clear sensors (and any referencing rules) in
+                // one pass. The toggle is reverted to checked until that flow resolves.
+                if (!e.target.checked) {
+                    const list2 = (this.currentDevice && this.currentDevice.associatedSensors2) || [];
+                    if (list2.length > 0) {
+                        e.target.checked = true;
+                        this.openSensorBulkRemovalModal();
+                        return;
+                    }
+                }
+                this.showSensorsForSecondTravelTime = e.target.checked;
+                this.applySecondSensorsVisibility();
+                // The PCMS Travel Time 2 / Delay Time 2 pills are gated on this flag inside
+                // renderPcmsPill, so re-render the rule cards so they appear/disappear in
+                // unison with the toggle.
                 this.renderRules();
             });
         }
@@ -530,7 +585,7 @@ class PCMSApp {
         const cardRect = targetCard.getBoundingClientRect();
 
         const isInView = cardRect.top >= containerRect.top &&
-                         cardRect.bottom <= containerRect.bottom;
+            cardRect.bottom <= containerRect.bottom;
 
         if (!isInView) {
             // Snap scroll (instant) to bring card into view
@@ -602,35 +657,194 @@ class PCMSApp {
 
     // Sensors Accordion Methods
     setupSensorsAccordionListeners() {
-        const accordionToggle = document.getElementById('sensors-accordion-toggle');
-        if (accordionToggle) {
-            accordionToggle.addEventListener('click', () => {
-                this.toggleSensorsAccordion();
-            });
-        }
+        [1, 2, 3].forEach(n => {
+            const toggle = document.getElementById(`sensors-accordion-${n}-toggle`);
+            if (toggle) {
+                toggle.addEventListener('click', () => this.toggleSensorsAccordion(n));
+            }
+        });
     }
 
-    toggleSensorsAccordion() {
-        const content = document.getElementById('sensors-accordion-content');
-        const chevron = document.querySelector('.sensors-accordion-chevron');
+    toggleSensorsAccordion(n) {
+        const content = document.getElementById(`sensors-accordion-${n}-content`);
+        const accordion = document.getElementById(`sensors-accordion-${n}`);
+        if (!content || !accordion) return;
 
-        if (!content) return;
-
+        const chevron = accordion.querySelector('.sensors-accordion-chevron');
         const isCollapsed = content.classList.contains('collapsed');
         content.classList.toggle('collapsed', !isCollapsed);
+        this.sensorsAccordionExpanded[n] = isCollapsed;
 
         if (chevron) {
             chevron.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
-        // Render appropriate content based on state
-        this.renderSensorsAccordion(!isCollapsed);
+        this.renderSensorsAccordion();
     }
 
-    renderSensorsAccordion(collapsed = true) {
-        const container = document.getElementById('sensors-accordion-list');
-        const summaryEl = document.getElementById('sensors-accordion-summary');
+    applySecondSensorsVisibility() {
+        const accordion2 = document.getElementById('sensors-accordion-2');
+        if (!accordion2) return;
+        accordion2.classList.toggle('hidden', !this.showSensorsForSecondTravelTime);
+    }
 
+    openSensorBulkRemovalModal() {
+        if (!this.currentDevice) return;
+        const list2 = this.currentDevice.associatedSensors2 || [];
+        if (list2.length === 0) return;
+
+        const container = document.getElementById('sensor-bulk-removal-list');
+        if (container) {
+            container.innerHTML = list2.map(sensorId => {
+                const sensor = this.data.sensors.find(s => s.id === sensorId);
+                if (!sensor) return '';
+                const rulesUsing = this.getRulesUsingSensor(sensorId);
+                return this.renderSensorBulkGroup(sensor, rulesUsing);
+            }).join('');
+        }
+
+        // Keep the visible accordion state consistent (the toggle was snapped back).
+        this.renderSensorsAccordion();
+
+        const modal = document.getElementById('sensor-bulk-removal-modal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    renderSensorBulkGroup(sensor, rulesUsing) {
+        const hasRules = rulesUsing.length > 0;
+        const count = rulesUsing.length;
+        const countLabel = hasRules
+            ? `<span class="sensor-bulk-rule-count">${count} rule${count === 1 ? '' : 's'}</span>`
+            : `<span class="sensor-bulk-rule-count sensor-bulk-rule-count-empty">No rules</span>`;
+
+        if (hasRules) {
+            const rulesHtml = rulesUsing.map(rule => {
+                const globalIndex = this.rules.indexOf(rule);
+                const ruleNumber = globalIndex >= 0 ? globalIndex + 1 : '?';
+                return `
+                    <label class="sensor-removal-rule-item">
+                        <span class="sensor-removal-rule-left">
+                            <input type="checkbox" class="sensor-bulk-rule-checkbox" data-sensor-id="${sensor.id}" data-rule-index="${globalIndex}">
+                            <span class="sensor-removal-rule-number">#${ruleNumber}</span>
+                        </span>
+                        <span class="sensor-removal-rule-text">${this.renderRuleSummaryForRemoval(rule, sensor.id)}</span>
+                    </label>
+                `;
+            }).join('');
+            return `
+                <div class="sensor-bulk-group" data-sensor-id="${sensor.id}">
+                    <div class="sensor-bulk-group-header">
+                        <span class="sensor-bulk-sensor-name">${sensor.name}</span>
+                        ${countLabel}
+                    </div>
+                    <div class="sensor-bulk-rules-list">${rulesHtml}</div>
+                </div>
+            `;
+        }
+
+        // Sensor has no rules — a single sensor-level checkbox drives the removal.
+        return `
+            <div class="sensor-bulk-group sensor-bulk-group-norules" data-sensor-id="${sensor.id}">
+                <label class="sensor-bulk-group-header sensor-bulk-sensor-row">
+                    <input type="checkbox" class="sensor-bulk-sensor-checkbox" data-sensor-id="${sensor.id}">
+                    <span class="sensor-bulk-sensor-name">${sensor.name}</span>
+                    ${countLabel}
+                </label>
+            </div>
+        `;
+    }
+
+    toggleSensorBulkAll(checked) {
+        document.querySelectorAll('#sensor-bulk-removal-list .sensor-bulk-rule-checkbox, #sensor-bulk-removal-list .sensor-bulk-sensor-checkbox')
+            .forEach(cb => { cb.checked = !!checked; });
+    }
+
+    closeSensorBulkRemovalModal() {
+        const modal = document.getElementById('sensor-bulk-removal-modal');
+        if (modal) modal.classList.add('hidden');
+        // The hide attempt was abandoned — the toggle already snapped back to checked.
+    }
+
+    confirmSensorBulkRemoval() {
+        if (!this.currentDevice) { this.closeSensorBulkRemovalModal(); return; }
+
+        // 1. Clear sensor references from every checked rule-row.
+        document.querySelectorAll('#sensor-bulk-removal-list .sensor-bulk-rule-checkbox:checked').forEach(cb => {
+            const sensorId = Number(cb.dataset.sensorId);
+            const ruleIdx = parseInt(cb.dataset.ruleIndex, 10);
+            const rule = this.rules[ruleIdx];
+            if (rule) this.removeSensorFromRule(rule, sensorId);
+        });
+
+        // 2. Decide which sensors leave list 2:
+        //    - "No-rules" sensors: leave iff their sensor-level checkbox was checked.
+        //    - "Has-rules" sensors: leave iff they now have zero remaining rule usage
+        //      (i.e. the user cleared every rule that referenced them).
+        const list2 = this.currentDevice.associatedSensors2 || [];
+        const noRulesCheckedIds = new Set(
+            Array.from(document.querySelectorAll('#sensor-bulk-removal-list .sensor-bulk-sensor-checkbox:checked'))
+                .map(cb => Number(cb.dataset.sensorId))
+        );
+        const toRemove = [];
+        list2.forEach(sensorId => {
+            const stillUsed = this.getRulesUsingSensor(sensorId).length > 0;
+            if (stillUsed) return;
+            const sensorCheckbox = document.querySelector(`#sensor-bulk-removal-list .sensor-bulk-sensor-checkbox[data-sensor-id="${sensorId}"]`);
+            if (sensorCheckbox) {
+                if (noRulesCheckedIds.has(sensorId)) toRemove.push(sensorId);
+            } else {
+                // Sensor was in the "has-rules" bucket and now has none left → removed.
+                toRemove.push(sensorId);
+            }
+        });
+
+        toRemove.forEach(id => {
+            const idx = list2.indexOf(id);
+            if (idx !== -1) list2.splice(idx, 1);
+        });
+
+        this.saveToLocalStorage();
+        this.saveDeviceConfiguration();
+
+        // 3. If list 2 is now empty, complete the hide. Otherwise keep the toggle on.
+        const toggle = document.getElementById('show-sensors-2-toggle');
+        if (list2.length === 0) {
+            this.showSensorsForSecondTravelTime = false;
+            if (toggle) toggle.checked = false;
+            this.applySecondSensorsVisibility();
+        } else if (toggle) {
+            toggle.checked = true;
+        }
+
+        this.renderRules();
+        this.renderSensorsAccordion();
+
+        const modal = document.getElementById('sensor-bulk-removal-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    /** Returns the sensor id list backing a given accordion. */
+    getAccordionSensorList(n) {
+        if (!this.currentDevice) return [];
+        if (n === 2) {
+            if (!Array.isArray(this.currentDevice.associatedSensors2)) {
+                this.currentDevice.associatedSensors2 = [];
+            }
+            return this.currentDevice.associatedSensors2;
+        }
+        if (!Array.isArray(this.currentDevice.associatedSensors)) {
+            this.currentDevice.associatedSensors = [];
+        }
+        return this.currentDevice.associatedSensors;
+    }
+
+    renderSensorsAccordion() {
+        [1, 2, 3].forEach(n => this.renderSingleAccordion(n));
+    }
+
+    renderSingleAccordion(n) {
+        const container = document.getElementById(`sensors-accordion-${n}-list`);
+        const summaryEl = document.getElementById(`sensors-accordion-${n}-summary`);
         if (!container || !summaryEl) return;
 
         if (!this.currentDevice) {
@@ -639,113 +853,250 @@ class PCMSApp {
             return;
         }
 
-        const associated = this.currentDevice.associatedSensors || [];
-        const allSensors = [...this.data.sensors].sort((a, b) =>
-            a.name.localeCompare(b.name)
-        );
+        const isBluetoothAccordion = n === 3;
+        const backingList = this.getAccordionSensorList(isBluetoothAccordion ? 1 : n);
 
-        // Update summary (shows selected sensors as pills when collapsed)
-        if (associated.length === 0) {
-            summaryEl.innerHTML = '<span class="no-sensors-text">No sensors selected</span>';
+        const availableSensors = [...this.data.sensors]
+            .filter(s => isBluetoothAccordion ? s.isBluetooth : !s.isBluetooth)
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        const selectedHere = backingList
+            .map(id => availableSensors.find(s => s.id === id))
+            .filter(Boolean)
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        if (selectedHere.length === 0) {
+            summaryEl.innerHTML = isBluetoothAccordion
+                ? '<span class="no-sensors-text">No routes selected</span>'
+                : '<span class="no-sensors-text">No sensors selected</span>';
         } else {
-            const selectedSensors = associated
-                .map(id => this.data.sensors.find(s => s.id === id))
-                .filter(Boolean)
-                .sort((a, b) => a.name.localeCompare(b.name));
-            summaryEl.innerHTML = selectedSensors
-                .map(s => `<span class="sensor-summary-pill${s.isBluetooth ? ' sensor-summary-pill-bt' : ''}">${s.name}</span>`)
+            summaryEl.innerHTML = selectedHere
+                .map(s => `<span class="sensor-summary-pill${isBluetoothAccordion ? ' sensor-summary-pill-bt' : ''}">${s.name}</span>`)
                 .join('');
         }
 
-        // When collapsed, show only selected sensors as a summary (no checkboxes)
-        if (collapsed) {
+        const expanded = this.sensorsAccordionExpanded[n];
+        if (!expanded) {
             container.innerHTML = '';
             return;
         }
 
-        // Split sensors into regular and bluetooth groups
-        const regularSensors = allSensors.filter(s => !s.isBluetooth);
-        const btSensors = allSensors.filter(s => s.isBluetooth);
-        const btSelectedCount = associated.filter(id => {
-            const s = this.data.sensors.find(sen => sen.id === id);
-            return s && s.isBluetooth;
-        }).length;
-
-        // When expanded, show all sensors with checkboxes (sectioned)
         container.innerHTML = '';
 
-        // Regular sensors section
-        regularSensors.forEach(sensor => {
-            const isChecked = associated.includes(sensor.id);
+        const btSelectedCount = isBluetoothAccordion ? backingList.filter(id => {
+            const s = this.data.sensors.find(sen => sen.id === id);
+            return s && s.isBluetooth;
+        }).length : 0;
+
+        availableSensors.forEach(sensor => {
+            const isChecked = backingList.includes(sensor.id);
+            const atLimit = isBluetoothAccordion && btSelectedCount >= 3 && !isChecked;
             const item = document.createElement('label');
-            item.className = 'sensor-checkbox-item';
+            item.className = 'sensor-checkbox-item'
+                + (isBluetoothAccordion ? ' sensor-checkbox-item-bt' : '')
+                + (atLimit ? ' sensor-checkbox-disabled' : '');
             item.innerHTML = `
-                <input type="checkbox" ${isChecked ? 'checked' : ''} data-sensor-id="${sensor.id}">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} ${atLimit ? 'disabled' : ''} data-sensor-id="${sensor.id}">
                 <span>${sensor.name}</span>
             `;
-
             item.querySelector('input').addEventListener('change', () => {
-                this.toggleSensorFromAccordion(sensor.id);
+                this.toggleSensorFromAccordion(sensor.id, n);
             });
-
             container.appendChild(item);
         });
 
-        // Bluetooth routes section
-        if (btSensors.length > 0) {
-            const divider = document.createElement('div');
-            divider.className = 'sensor-section-divider';
-            divider.innerHTML = `<span class="sensor-section-label">Bluetooth Routes</span>`;
-            container.appendChild(divider);
-
-            btSensors.forEach(sensor => {
-                const isChecked = associated.includes(sensor.id);
-                const atLimit = btSelectedCount >= 3 && !isChecked;
-                const item = document.createElement('label');
-                item.className = 'sensor-checkbox-item sensor-checkbox-item-bt' + (atLimit ? ' sensor-checkbox-disabled' : '');
-                item.innerHTML = `
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} ${atLimit ? 'disabled' : ''} data-sensor-id="${sensor.id}">
-                    <span>${sensor.name}</span>
-                `;
-
-                item.querySelector('input').addEventListener('change', () => {
-                    this.toggleSensorFromAccordion(sensor.id);
-                });
-
-                container.appendChild(item);
-            });
-
-            if (btSelectedCount >= 3) {
-                const limitMsg = document.createElement('div');
-                limitMsg.className = 'bt-limit-message';
-                limitMsg.textContent = 'Maximum of 3 Bluetooth routes per device';
-                container.appendChild(limitMsg);
-            }
+        if (isBluetoothAccordion && btSelectedCount >= 3) {
+            const limitMsg = document.createElement('div');
+            limitMsg.className = 'bt-limit-message';
+            limitMsg.textContent = 'Maximum of 3 Bluetooth routes per device';
+            container.appendChild(limitMsg);
         }
     }
 
-    toggleSensorFromAccordion(sensorId) {
+    toggleSensorFromAccordion(sensorId, accordionN = 1) {
         if (!this.currentDevice) return;
 
-        const index = this.currentDevice.associatedSensors.indexOf(sensorId);
+        const list = this.getAccordionSensorList(accordionN === 3 ? 1 : accordionN);
+        const index = list.indexOf(sensorId);
         if (index !== -1) {
-            this.currentDevice.associatedSensors.splice(index, 1);
+            // User is unchecking a sensor. If it's referenced by any rule, prompt
+            // the user to clear it from those rules first; only commit the removal
+            // from the accordion if no rule usage remains after the modal flow.
+            const rulesUsing = this.getRulesUsingSensor(sensorId);
+            if (rulesUsing.length > 0) {
+                this.openSensorRemovalModal(sensorId, accordionN);
+                return;
+            }
+            list.splice(index, 1);
         } else {
-            // Enforce max 3 Bluetooth routes per device
+            // Enforce max 3 Bluetooth routes per device (only on the bluetooth accordion's backing list)
             const sensor = this.data.sensors.find(s => s.id === sensorId);
             if (sensor && sensor.isBluetooth) {
-                const btCount = this.currentDevice.associatedSensors.filter(id => {
+                const btCount = list.filter(id => {
                     const s = this.data.sensors.find(sen => sen.id === id);
                     return s && s.isBluetooth;
                 }).length;
                 if (btCount >= 3) return;
             }
-            this.currentDevice.associatedSensors.push(sensorId);
+            list.push(sensorId);
         }
 
         this.saveDeviceConfiguration();
-        this.renderSensorsAccordion(false); // Keep expanded, update checkboxes
-        this.renderRules(); // Update rule dropdowns
+        this.renderSensorsAccordion();
+        this.renderRules();
+    }
+
+    /** Returns every rule on the current device that references sensorId (via rule.sensor or any pill). */
+    getRulesUsingSensor(sensorId) {
+        return (this.rules || []).filter(rule => this.ruleUsesSensor(rule, sensorId));
+    }
+
+    ruleUsesSensor(rule, sensorId) {
+        if (rule.sensor != null && rule.sensor !== '' && rule.sensor == sensorId) return true;
+        if (rule.btPills) {
+            for (const key of ['screen1', 'screen2']) {
+                const arr = rule.btPills[key] || [];
+                for (const pill of arr) {
+                    if (pill && pill.sensorId != null && pill.sensorId == sensorId) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Clears every reference to sensorId on a single rule (rule.sensor + any pills). */
+    removeSensorFromRule(rule, sensorId) {
+        if (rule.sensor != null && rule.sensor == sensorId) {
+            rule.sensor = '';
+        }
+        if (rule.btPills) {
+            for (const key of ['screen1', 'screen2']) {
+                const arr = rule.btPills[key];
+                if (!Array.isArray(arr)) continue;
+                for (let i = 0; i < arr.length; i++) {
+                    if (arr[i] && arr[i].sensorId != null && arr[i].sensorId == sensorId) {
+                        arr[i] = null;
+                    }
+                }
+            }
+        }
+    }
+
+    openSensorRemovalModal(sensorId, accordionN) {
+        const sensor = this.data.sensors.find(s => s.id === sensorId);
+        if (!sensor) return;
+
+        const rulesUsing = this.getRulesUsingSensor(sensorId);
+        this.pendingSensorRemoval = { sensorId, accordionN };
+
+        const listEl = document.getElementById('sensor-removal-rule-list');
+        if (listEl) {
+            listEl.innerHTML = rulesUsing.map(rule => {
+                const globalIndex = this.rules.indexOf(rule);
+                const ruleNumber = globalIndex >= 0 ? globalIndex + 1 : '?';
+                return `
+                    <label class="sensor-removal-rule-item">
+                        <span class="sensor-removal-rule-left">
+                            <input type="checkbox" class="sensor-removal-rule-checkbox" data-rule-index="${globalIndex}">
+                            <span class="sensor-removal-rule-number">#${ruleNumber}</span>
+                        </span>
+                        <span class="sensor-removal-rule-text">${this.renderRuleSummaryForRemoval(rule, sensorId)}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        // Re-render accordions so the checkbox visually reverts until the user confirms/cancels.
+        this.renderSensorsAccordion();
+
+        const modal = document.getElementById('sensor-removal-modal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    renderRuleSummaryForRemoval(rule, sensorId) {
+        const metric = this.data.metrics.find(m => m.id == rule.metric);
+        const metricName = metric ? metric.name : 'Unknown metric';
+
+        let unitText = '';
+        if (metric) {
+            if (metric.value.includes('speed')) unitText = 'MPH';
+            else if (metric.value.includes('travel_time')) unitText = 'minutes';
+            else unitText = 'vehicles/minute';
+        }
+
+        const conditionText = rule.operator === 'less' ? 'less than' : 'greater than';
+        const thresholdText = rule.threshold !== '' && rule.threshold != null ? rule.threshold : '?';
+
+        let sensorPill = '';
+        if (metric && (metric.value.includes('_any') || metric.value.includes('_all'))) {
+            sensorPill = `<span class="pill pill-sensor">${metric.value.includes('_any') ? 'Any Sensor' : 'All Sensors'}</span>`;
+        } else if (rule.sensor) {
+            const ruleSensor = this.data.sensors.find(s => s.id == rule.sensor);
+            if (ruleSensor) {
+                const highlight = ruleSensor.id == sensorId ? ' sensor-removal-sensor-highlight' : '';
+                sensorPill = `<span class="pill pill-sensor${highlight}">${ruleSensor.name}</span>`;
+            }
+        }
+
+        const screen1Text = (rule.screen1 || []).filter(l => l).join(' | ') || '-';
+        const screen2Text = (rule.screen2 || []).filter(l => l).join(' | ') || '-';
+        const displayText = rule.sameAsScreen1 ? screen1Text : `${screen1Text} → ${screen2Text}`;
+
+        return `
+            <span class="sensor-removal-rule-word">If</span>
+            <span class="pill pill-metric">${metricName}</span>
+            ${sensorPill}
+            <span class="sensor-removal-rule-word">is ${conditionText}</span>
+            <span class="pill pill-condition">${thresholdText} ${unitText}</span>
+            <span class="sensor-removal-rule-word">then</span>
+            <span class="sensor-removal-rule-display">${displayText}</span>
+        `;
+    }
+
+    toggleSensorRemovalAllCheckboxes(checked) {
+        document.querySelectorAll('.sensor-removal-rule-checkbox').forEach(cb => {
+            cb.checked = !!checked;
+        });
+    }
+
+    closeSensorRemovalModal() {
+        const modal = document.getElementById('sensor-removal-modal');
+        if (modal) modal.classList.add('hidden');
+        this.pendingSensorRemoval = null;
+        this.renderSensorsAccordion();
+    }
+
+    confirmSensorRemoval() {
+        if (!this.pendingSensorRemoval) {
+            this.closeSensorRemovalModal();
+            return;
+        }
+        const { sensorId, accordionN } = this.pendingSensorRemoval;
+
+        const checked = document.querySelectorAll('.sensor-removal-rule-checkbox:checked');
+        checked.forEach(cb => {
+            const idx = parseInt(cb.dataset.ruleIndex, 10);
+            const rule = this.rules[idx];
+            if (rule) this.removeSensorFromRule(rule, sensorId);
+        });
+
+        this.saveToLocalStorage();
+        this.renderRules();
+        if (typeof this.updateDevOutput === 'function') this.updateDevOutput();
+
+        // If no rule still references the sensor, commit the accordion removal.
+        if (this.getRulesUsingSensor(sensorId).length === 0) {
+            const list = this.getAccordionSensorList(accordionN === 3 ? 1 : accordionN);
+            const idx = list.indexOf(sensorId);
+            if (idx !== -1) list.splice(idx, 1);
+            this.saveDeviceConfiguration();
+        }
+
+        const modal = document.getElementById('sensor-removal-modal');
+        if (modal) modal.classList.add('hidden');
+        this.pendingSensorRemoval = null;
+
+        this.renderSensorsAccordion();
     }
 
     selectDevice(deviceNumber, deviceType = 'pcms') {
@@ -804,7 +1155,8 @@ class PCMSApp {
     saveDeviceConfiguration() {
         const deviceConfigs = JSON.parse(localStorage.getItem('pcms_device_configs') || '{}');
         deviceConfigs[this.currentDevice.deviceNumber] = {
-            associatedSensors: this.currentDevice.associatedSensors
+            associatedSensors: this.currentDevice.associatedSensors,
+            associatedSensors2: this.currentDevice.associatedSensors2 || []
         };
         localStorage.setItem('pcms_device_configs', JSON.stringify(deviceConfigs));
     }
@@ -1529,24 +1881,18 @@ class PCMSApp {
         this.devMode = !this.devMode;
         const devOutput = document.getElementById('dev-output');
         const headerBtn = document.getElementById('dev-mode-toggle');
-        const editViewBtn = document.getElementById('edit-view-dev-mode-toggle');
+        const pcmsCheckbox = document.getElementById('pcms-code-toggle');
 
         if (this.devMode) {
             devOutput.classList.remove('hidden');
             if (headerBtn) headerBtn.textContent = 'Hide PCMS Code';
-            if (editViewBtn) {
-                editViewBtn.textContent = 'Hide PCMS Code';
-                editViewBtn.classList.add('active');
-            }
             this.updateDevOutput();
         } else {
             devOutput.classList.add('hidden');
             if (headerBtn) headerBtn.textContent = 'Show PCMS Code';
-            if (editViewBtn) {
-                editViewBtn.textContent = 'Show PCMS Code';
-                editViewBtn.classList.remove('active');
-            }
         }
+
+        if (pcmsCheckbox) pcmsCheckbox.checked = this.devMode;
     }
 
     saveToLocalStorage() {
@@ -1663,15 +2009,17 @@ class PCMSApp {
             return;
         }
 
-        container.innerHTML = '';
+        if (container) {
 
-        this.data.messageSets.forEach(set => {
-            const item = document.createElement('div');
-            item.className = 'message-set-item';
+            container.innerHTML = '';
 
-            const date = new Date(set.created).toLocaleDateString();
+            this.data.messageSets.forEach(set => {
+                const item = document.createElement('div');
+                item.className = 'message-set-item';
 
-            item.innerHTML = `
+                const date = new Date(set.created).toLocaleDateString();
+
+                item.innerHTML = `
                 <h4>${set.name}</h4>
                 <p>${set.deviceName} - ${set.rules.length} rule(s) - ${date}</p>
                 <div class="actions">
@@ -1680,8 +2028,9 @@ class PCMSApp {
                 </div>
             `;
 
-            container.appendChild(item);
-        });
+                container.appendChild(item);
+            });
+        }
     }
 
     // ========================================
@@ -1758,10 +2107,76 @@ class PCMSApp {
         } else {
             this.drafts = [];
         }
+        //this.drafts = [];
+        //const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        //fetch(`/LogicSet?handler=LoadDrafts&projectId=${encodeURIComponent(ProjectName)}`, {
+        //    method: 'GET',
+        //    headers: {
+        //        'Content-Type': 'application/json',
+        //        'RequestVerificationToken': token
+        //    }
+        //})
+        //    .then(response => {
+        //        if (!response.ok) {
+        //            throw new Error("Server returned " + response.status);
+        //        }
+        //        return response.json();
+        //    })
+        //    .then(data => {
+        //        console.log("Drafts loaded:", data);
+
+        //        // If your controller returns a list of SetDraft objects:
+        //        this.drafts = data;
+        //        this.renderHomepageDrafts();
+        //    })
+        //    .catch(error => {
+        //        console.warn('Could not load Drafts from server:', error);
+        //    });
     }
 
     saveDrafts() {
         localStorage.setItem('pcms_drafts', JSON.stringify(this.drafts));
+        //const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        //fetch(`/LogicSet?handler=UpsertDrafts&projectId=${encodeURIComponent(ProjectName)}`, {
+        //    method: 'POST',
+        //    headers: {
+        //        'Content-Type': 'application/json',
+        //        'RequestVerificationToken': token
+        //    },
+        //    body: JSON.stringify(this.currentDraft ? [this.currentDraft] : this.drafts)
+        //})
+        //    .then(response => {
+        //        if (!response.ok) {
+        //            throw new Error("Server returned " + response.status);
+        //        }
+        //        return response.json();
+        //    })
+        //    .then(data => {
+        //        if (data.success) {
+        //            console.log("Drafts saved successfully:", data.results);
+
+        //            if (this.currentDraft) {
+        //                this.currentDraft.id = data.results[0].draftId;
+        //            }
+        //            else {
+        //                // Update local drafts with returned IDs
+        //                data.results.forEach((result, index) => {
+        //                    if (result.success && result.draftId > 0) {
+        //                        this.drafts[index].id = result.draftId;
+        //                    }
+        //                });
+        //            }
+
+        //            //localStorage.setItem('pcms_drafts', JSON.stringify(this.drafts));
+
+        //        } else {
+        //            console.warn("Save failed:", data.error);
+        //        }
+        //    })
+        //    .catch(error => {
+        //        console.warn('Could not save Drafts to server:', error);
+        //    });
     }
 
     createSampleDevicesSnapshot(deviceConfigs) {
@@ -1816,6 +2231,50 @@ class PCMSApp {
 
     saveMessageSets() {
         localStorage.setItem('pcms_message_sets_v3', JSON.stringify(this.messageSets));
+        //const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        //fetch(`/LogicSet?handler=UpsertMessageSets&projectId=${encodeURIComponent(ProjectName)}`, {
+        //    method: 'POST',
+        //    headers: {
+        //        'Content-Type': 'application/json',
+        //        'RequestVerificationToken': token
+        //    },
+        //    body: JSON.stringify([this.messageSets[this.messageSets.length - 1]])
+        //})
+        //    .then(response => {
+        //        if (!response.ok) {
+        //            throw new Error("Server returned " + response.status);
+        //        }
+        //        return response.json();
+        //    })
+        //    .then(data => {
+        //        if (data.success) {
+        //            console.log("Message sets saved successfully:", data.results);
+
+        //            this.renderProjectHistory();
+
+        //            // Remove the draft if it was saved from an existing draft
+        //            if (this.currentDraft && this.currentDraft.id) {
+        //                this.drafts = this.drafts.filter(d => d.id !== this.currentDraft.id);
+        //                //this.saveDrafts();
+        //                this.renderDraftsList();
+        //            }
+
+        //            // Close modal and exit draft mode
+        //            document.getElementById('save-version-modal').classList.add('hidden');
+        //            this.hideDraftMode();
+
+        //            // Return to homepage
+        //            this.goToHomepage();
+
+        //            alert('Message set published to Project History!');
+
+        //        } else {
+        //            console.warn("Save failed:", data.error);
+        //        }
+        //    })
+        //    .catch(error => {
+        //        console.warn('Could not save Drafts to server:', error);
+        //    });
     }
 
     // Application History (Timeline)
@@ -2257,7 +2716,7 @@ class PCMSApp {
         if (!name || !name.trim()) return;
 
         const draft = {
-            id: Date.now(),
+            id: 0, //Date.now(),
             name: name.trim(),
             created: new Date().toISOString(),
             basedOn: {
@@ -2267,12 +2726,15 @@ class PCMSApp {
             devices: JSON.parse(JSON.stringify(messageSet.devices))
         };
 
+        this.currentDraft = draft;
+
         this.drafts.push(draft);
         this.saveDrafts();
         this.renderDraftsList();
         this.renderHomepageDrafts();
 
-        alert(`Created draft "${draft.name}". Click on it to edit.`);
+        //alert(`Created draft "${draft.name}". Click on it to edit.`);
+        this.editDraft(draft);
     }
 
     // Edit a draft - load it into the editor
@@ -2340,9 +2802,39 @@ class PCMSApp {
     // Delete a draft
     deleteDraft(draftId) {
         if (!confirm('Delete this draft? This cannot be undone.')) return;
+        //const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
+        //fetch(`/LogicSet?handler=DeleteDraft&messageSetId=${encodeURIComponent(draftId)}&projectId=${encodeURIComponent(ProjectName)}`, {
+        //    method: 'POST',
+        //    headers: {
+        //        'Content-Type': 'application/json',
+        //        'RequestVerificationToken': token
+        //    }
+        //})
+        //    .then(response => {
+        //        if (!response.ok) {
+        //            throw new Error("Server returned " + response.status);
+        //        }
+        //        return response.json();
+        //    })
+        //    .then(data => {
+        //        if (data.success) {
+        //            console.log(`Draft ${draftId} deleted successfully.`);
+        //            this.loadDrafts();
+        //        } else {
+        //            console.warn(`Failed to delete draft ${draftId}.`);
+        //            alert("Delete failed.");
+        //        }
+        //    })
+        //    .catch(error => {
+        //        console.error("Error deleting draft:", error);
+        //        alert("An error occurred while deleting the draft.");
+        //    });
         this.drafts = this.drafts.filter(d => d.id !== draftId);
+
         this.saveDrafts();
+        localStorage.setItem('pcms_drafts', JSON.stringify(this.drafts));
+
         this.renderDraftsList();
     }
 
@@ -2768,7 +3260,7 @@ class PCMSApp {
         if (!this.viewingMessageSet) return;
 
         const draft = {
-            id: Date.now(),
+            id: 0, //Date.now(),
             name: `${this.viewingMessageSet.name} (Copy)`,
             created: new Date().toISOString(),
             basedOn: {
@@ -2778,6 +3270,7 @@ class PCMSApp {
             devices: JSON.parse(JSON.stringify(this.viewingMessageSet.devices))
         };
 
+        this.currentDraft = draft;
         this.drafts.push(draft);
         this.saveDrafts();
 
@@ -2825,13 +3318,15 @@ class PCMSApp {
         });
 
         const draft = {
-            id: Date.now(),
+            id: 0, //Date.now(),
             name: name.trim(),
             created: new Date().toISOString(),
             basedOn: null,
             devices: devices,
             webBeacons: webBeacons
         };
+
+        this.currentDraft = draft;
 
         this.drafts.push(draft);
         this.saveDrafts();
@@ -2903,7 +3398,7 @@ class PCMSApp {
         if (!name || !name.trim()) return;
 
         const draft = {
-            id: Date.now(),
+            id: 0, //Date.now(),
             name: name.trim(),
             created: new Date().toISOString(),
             basedOn: {
@@ -2914,6 +3409,7 @@ class PCMSApp {
             webBeacons: JSON.parse(JSON.stringify(entry.webBeacons || []))
         };
 
+        this.currentDraft = draft;
         this.drafts.push(draft);
         this.saveDrafts();
         this.renderDraftsList();
@@ -3470,7 +3966,7 @@ class PCMSApp {
         // Create new message set entry in project history (no versions)
         const newId = Math.max(0, ...this.messageSets.map(s => s.id)) + 1;
         this.messageSets.push({
-            id: newId,
+            id: this.currentDraft.id, //newId,
             name: name,
             timestamp: new Date().toISOString(),
             notes: notes,
@@ -3479,23 +3975,23 @@ class PCMSApp {
         });
 
         this.saveMessageSets();
-        this.renderProjectHistory();
+        //this.renderProjectHistory();
 
-        // Remove the draft if it was saved from an existing draft
-        if (this.currentDraft && this.currentDraft.id) {
-            this.drafts = this.drafts.filter(d => d.id !== this.currentDraft.id);
-            this.saveDrafts();
-            this.renderDraftsList();
-        }
+        //// Remove the draft if it was saved from an existing draft
+        //if (this.currentDraft && this.currentDraft.id) {
+        //    this.drafts = this.drafts.filter(d => d.id !== this.currentDraft.id);
+        //    this.saveDrafts();
+        //    this.renderDraftsList();
+        //}
 
-        // Close modal and exit draft mode
-        document.getElementById('save-version-modal').classList.add('hidden');
-        this.hideDraftMode();
+        //// Close modal and exit draft mode
+        //document.getElementById('save-version-modal').classList.add('hidden');
+        //this.hideDraftMode();
 
-        // Return to homepage
-        this.goToHomepage();
+        //// Return to homepage
+        //this.goToHomepage();
 
-        alert('Message set published to Project History!');
+        //alert('Message set published to Project History!');
     }
 
     cancelSaveVersion() {
@@ -3590,3 +4086,10 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new PCMSApp();
 });
+
+document.getElementById('redirectButton').onclick = function (event) {
+    event.preventDefault();
+
+    // Redirect to the home page
+    window.location.href = `/?pid=${encodeURIComponent(ProjectName)}`;
+};
