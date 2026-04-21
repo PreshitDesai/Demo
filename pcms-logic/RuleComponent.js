@@ -623,13 +623,18 @@ class RuleComponent {
      */
     getChipLabel(pill) {
         const abbr = this.getModeAbbreviation(this.getPillMode(pill));
-        const baseName = this.getPillKind(pill) === 'pcms' ? 'PCMS' : this.getPillLabel(pill.sensorId);
-        return `${baseName} ${abbr}`;
+        const isPcms = this.getPillKind(pill) === 'pcms';
+        const baseName = isPcms ? 'PCMS' : this.getPillLabel(pill.sensorId);
+        const suffix = isPcms && pill && pill.source === 2 ? '2' : '';
+        return `${baseName} ${abbr}${suffix}`;
     }
 
-    /** CSS class that drives the chip's color: orange for PCMS, blue for BT. */
+    /** CSS class that drives the chip's color: orange for PCMS, green for PCMS source 2, blue for BT. */
     getChipKindClass(pill) {
-        return this.getPillKind(pill) === 'pcms' ? 'pcms-pill-chip' : 'bt-pill-chip';
+        if (this.getPillKind(pill) === 'pcms') {
+            return pill && pill.source === 2 ? 'pcms-pill-chip pcms-pill-chip-2' : 'pcms-pill-chip';
+        }
+        return 'bt-pill-chip';
     }
 
     /**
@@ -688,10 +693,19 @@ class RuleComponent {
      */
     renderPcmsPill(mode) {
         const label = `PCMS ${this.getModeName(mode)}`;
-        return `<span class="metric-pill-draggable pcms-pill-draggable"
+        const primary = `<span class="metric-pill-draggable pcms-pill-draggable"
                       draggable="true"
                       data-pill-type="pcms"
-                      data-pill-mode="${mode}">${label}</span>`;
+                      data-pill-mode="${mode}"
+                      data-pill-source="1">${label}</span>`;
+        if (!this.app.showSensorsForSecondTravelTime) return primary;
+        const label2 = `PCMS ${this.getModeName(mode)} 2`;
+        const secondary = `<span class="metric-pill-draggable pcms-pill-draggable-2"
+                      draggable="true"
+                      data-pill-type="pcms"
+                      data-pill-mode="${mode}"
+                      data-pill-source="2">${label2}</span>`;
+        return primary + secondary;
     }
 
     /**
@@ -758,23 +772,33 @@ class RuleComponent {
             }).join('');
         }
 
+        const list1 = this.app.currentDevice.associatedSensors || [];
+        const list2 = this.app.currentDevice.associatedSensors2 || [];
+        const showTwo = !!this.app.showSensorsForSecondTravelTime;
+
+        // Build the ordered, deduplicated union of sensor ids (list1 first, then any new list2 ids).
+        const seen = new Set();
+        const unionIds = [];
+        (showTwo ? [...list1, ...list2] : list1).forEach(id => {
+            if (seen.has(id)) return;
+            seen.add(id);
+            unionIds.push(id);
+        });
+
         if (isBtSpeed) {
-            // Speed + Bluetooth: show ALL sensors assigned to the device (regular + BT)
-            const allSensors = this.app.currentDevice.associatedSensors.map(sensorId =>
-                this.app.data.sensors.find(s => s.id === sensorId)
-            ).filter(Boolean);
-            // Also include BT virtual sensors
+            // Speed + Bluetooth: show ALL assigned sensors (regular from list1 + optionally list2) + BT virtual sensors
+            const regular = unionIds.map(id => this.app.data.sensors.find(s => s.id === id)).filter(Boolean);
             const btSensors = this.app.data.sensors.filter(s => s.isBluetooth === true);
-            const combined = [...allSensors, ...btSensors.filter(bt => !allSensors.some(a => a.id === bt.id))];
+            const combined = [...regular, ...btSensors.filter(bt => !regular.some(a => a.id === bt.id))];
             return combined.map(sensor => {
                 const selected = this.rule.sensor == sensor.id ? 'selected' : '';
                 return `<option value="${sensor.id}" ${selected}>${sensor.name}</option>`;
             }).join('');
         }
 
-        // Regular metrics use the device's associated sensors (exclude bluetooth)
-        return this.app.currentDevice.associatedSensors.map(sensorId => {
-            const sensor = this.app.data.sensors.find(s => s.id === sensorId);
+        // Regular metrics: deduplicated union of Sensor 1 and Sensor 2 selections (bluetooth excluded)
+        return unionIds.map(id => {
+            const sensor = this.app.data.sensors.find(s => s.id === id);
             if (!sensor || sensor.isBluetooth) return '';
             const selected = this.rule.sensor == sensor.id ? 'selected' : '';
             return `<option value="${sensor.id}" ${selected}>${sensor.name}</option>`;
@@ -1060,7 +1084,8 @@ class RuleComponent {
                 const payload = JSON.stringify({
                     pillType: draggable.dataset.pillType,
                     mode:     draggable.dataset.pillMode,
-                    sensorId: sensorId
+                    sensorId: sensorId,
+                    source:   draggable.dataset.pillSource ? Number(draggable.dataset.pillSource) : 1
                 });
                 e.dataTransfer.setData('application/bt-pill', payload);
                 e.dataTransfer.effectAllowed = 'copy';
@@ -1155,6 +1180,7 @@ class RuleComponent {
                     pillType: descriptor.pillType,
                     mode:     descriptor.mode || 'travel_time',
                     sensorId: descriptor.sensorId ?? null,
+                    source:   descriptor.source || 1,
                     position
                 };
 
