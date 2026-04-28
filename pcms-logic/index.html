@@ -489,6 +489,35 @@
                     </div>
                 </div>
             </div>
+            <!-- Logic Type Conflict Modal -->
+<div id="logic-conflict-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3>That Logic Type Can't Be Mixed Here</h3>
+        <div class="modal-body">
+            <p id="logic-conflict-message"></p>
+            <p>Please remove or change the conflicting rules first, then try again.</p>
+        </div>
+        <div class="modal-actions">
+            <button id="logic-conflict-ok" class="btn-modal-confirm">Got It</button>
+        </div>
+    </div>
+</div>
+
+<!-- Unsaved Draft Back Warning Modal -->
+<div id="back-unsaved-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3>Unsaved Draft Changes</h3>
+        <div class="modal-body">
+            <p>You have edits to this draft that haven't been saved or set to live.</p>
+            <p>If you leave now, those changes will be lost.</p>
+        </div>
+        <div class="modal-actions">
+            <button id="back-unsaved-cancel" class="btn-modal-cancel">Keep Editing</button>
+            <button id="back-unsaved-discard" class="btn-modal-cancel">Discard &amp; Leave</button>
+            <button id="back-unsaved-save" class="btn-modal-confirm">Save Draft &amp; Leave</button>
+        </div>
+    </div>
+</div>
         </div>
 
         <!-- Bluetooth Routes Tab Content -->
