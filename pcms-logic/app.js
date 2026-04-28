@@ -3819,6 +3819,76 @@ class PCMSApp {
     }
 
     // Save current draft state (persists changes without going live)
+    /**
+     * Returns true when the user has edits to the current draft that have not been
+     * persisted via saveDraftState() or set-to-live. Detection works by comparing
+     * the rules + fallback message currently in localStorage (which receive every
+     * keystroke) against the snapshot stored on this.currentDraft (which only
+     * advances when the user explicitly saves).
+     */
+    hasUnsavedDraftChanges() {
+        if (!this.currentDraft || !this.isDraftMode) return false;
+
+        const stableStringify = (obj) => {
+            try { return JSON.stringify(obj); } catch (e) { return ''; }
+        };
+
+        const compareItem = (savedItem, includeFallback) => {
+            const stored = localStorage.getItem(`device_${savedItem.deviceNumber}`);
+            const savedRules = savedItem.rules || [];
+            if (!stored) {
+                return savedRules.length > 0;
+            }
+            let parsed;
+            try { parsed = JSON.parse(stored); } catch (e) { return false; }
+            const currentRules = parsed.rules || [];
+            if (stableStringify(currentRules) !== stableStringify(savedRules)) return true;
+            if (includeFallback) {
+                const blank = { screen1: ['', '', ''], screen2: ['', '', ''], sameAsScreen1: false };
+                const currentFb = parsed.fallbackMessage || blank;
+                const savedFb = savedItem.fallbackMessage || blank;
+                if (stableStringify(currentFb) !== stableStringify(savedFb)) return true;
+            }
+            return false;
+        };
+
+        const devices = this.currentDraft.devices || [];
+        if (devices.some(d => compareItem(d, true))) return true;
+        const beacons = this.currentDraft.webBeacons || [];
+        if (beacons.some(b => compareItem(b, false))) return true;
+        return false;
+    }
+
+    /**
+     * Pops the "you have unsaved edits" modal when the user clicks Back. The three
+     * buttons cover the cases the product owner asked for: save then leave, discard
+     * then leave, or stay on the page.
+     */
+    showBackUnsavedModal(onProceed) {
+        const modal = document.getElementById('back-unsaved-modal');
+        if (!modal) { onProceed(); return; }
+        modal.classList.remove('hidden');
+
+        const wire = (id, handler) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const fresh = btn.cloneNode(true);
+            btn.parentNode.replaceChild(fresh, btn);
+            fresh.addEventListener('click', handler);
+        };
+
+        wire('back-unsaved-cancel', () => modal.classList.add('hidden'));
+        wire('back-unsaved-discard', () => {
+            modal.classList.add('hidden');
+            onProceed();
+        });
+        wire('back-unsaved-save', () => {
+            this.saveDraftState();
+            modal.classList.add('hidden');
+            onProceed();
+        });
+    }
+
     saveDraftState() {
         if (!this.currentDraft) return;
 
@@ -4090,6 +4160,14 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('redirectButton').onclick = function (event) {
     event.preventDefault();
 
-    // Redirect to the home page
-    window.location.href = `/?pid=${encodeURIComponent(ProjectName)}`;
+    const navigate = () => {
+        window.location.href = `/?pid=${encodeURIComponent(ProjectName)}`;
+    };
+
+    if (app && app.hasUnsavedDraftChanges()) {
+        app.showBackUnsavedModal(navigate);
+        return;
+    }
+
+    navigate();
 };
