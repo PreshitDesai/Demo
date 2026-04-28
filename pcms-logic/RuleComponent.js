@@ -188,6 +188,69 @@ class RuleComponent {
     }
 
     /**
+     * Checks whether assigning `proposedMetricId` to this rule would create a logic-type
+     * combination that the PCMS cannot process. Returns a conflict descriptor for the
+     * caller to render in a modal, or null when the change is allowed.
+     *
+     * Rules:
+     *   - Bluetooth Travel Time (bt_travel_time) cannot be mixed with any other logic type.
+     *   - Speed (+ Bluetooth) (bt_speed) can only be mixed with Speed and Travel Time.
+     */
+    checkLogicConflict(proposedMetricId) {
+        if (!proposedMetricId) return null;
+        const proposed = this.app.data.metrics.find(m => m.id == proposedMetricId);
+        if (!proposed) return null;
+        const proposedValue = proposed.value;
+
+        const otherValues = this.app.rules
+            .filter(r => r.id !== this.rule.id && r.metric)
+            .map(r => {
+                const m = this.app.data.metrics.find(mm => mm.id == r.metric);
+                return m ? m.value : '';
+            })
+            .filter(Boolean);
+        if (otherValues.length === 0) return null;
+
+        const conflictsWithBtTravel =
+            (proposedValue === 'bt_travel_time' && otherValues.some(v => v !== 'bt_travel_time'))
+            || (proposedValue !== 'bt_travel_time' && otherValues.includes('bt_travel_time'));
+        if (conflictsWithBtTravel) {
+            return {
+                type: 'bt_travel_time',
+                message: 'Bluetooth Travel Time logic cannot be combined with any other logic type on the same PCMS.'
+            };
+        }
+
+        const btSpeedAllowed = ['speed', 'travel_time', 'bt_speed'];
+        const conflictsWithBtSpeed =
+            (proposedValue === 'bt_speed' && otherValues.some(v => !btSpeedAllowed.includes(v)))
+            || (otherValues.includes('bt_speed') && !btSpeedAllowed.includes(proposedValue));
+        if (conflictsWithBtSpeed) {
+            return {
+                type: 'bt_speed',
+                message: 'Speed (+ Bluetooth) can only be combined with Speed and Travel Time on the same PCMS.'
+            };
+        }
+
+        return null;
+    }
+
+    showLogicConflictModal(conflict) {
+        const modal = document.getElementById('logic-conflict-modal');
+        if (!modal) return;
+        const msgEl = document.getElementById('logic-conflict-message');
+        if (msgEl) msgEl.textContent = conflict.message;
+        modal.classList.remove('hidden');
+
+        const okBtn = document.getElementById('logic-conflict-ok');
+        if (okBtn) {
+            const newOk = okBtn.cloneNode(true);
+            okBtn.parentNode.replaceChild(newOk, okBtn);
+            newOk.addEventListener('click', () => modal.classList.add('hidden'));
+        }
+    }
+
+    /**
      * BACKEND NOTE: The word between the metric and the sensor/route dropdown.
      * - "Bluetooth Travel Time" -> "via"  (because the time is measured VIA a route)
      * - All other metrics       -> "at"   (because the metric is measured AT a sensor)
@@ -261,7 +324,7 @@ class RuleComponent {
      */
     _isPillChipNode(node) {
         return !!(node && node.nodeType === Node.ELEMENT_NODE && node.classList &&
-                  (node.classList.contains('bt-pill-chip') || node.classList.contains('pcms-pill-chip')));
+            (node.classList.contains('bt-pill-chip') || node.classList.contains('pcms-pill-chip')));
     }
 
     /**
@@ -514,7 +577,7 @@ class RuleComponent {
             const pillChip = pill
                 ? `<span class="${chipKindClass}" contenteditable="false">${chipLabel}<button class="bt-pill-remove" data-screen="${screen}" data-line="${lineIdx + 1}">&times;</button></span>`
                 : '';
-            const hasWarning = pill && text.length > 6;
+            const hasWarning = pill && text.length >= 6;
             const editableAttr = disabled ? 'false' : 'true';
 
             return `<div class="chip-input-container${hasWarning ? ' bt-char-warning-field' : ''}" data-screen="${screen}" data-line="${lineIdx + 1}">
@@ -533,8 +596,8 @@ class RuleComponent {
 
         // Any pill (PCMS or BT) plus typed text over 6 chars triggers the warning.
         const hasAnyWarning = [0, 1, 2].some(i =>
-            (this.rule.btPills.screen1[i] && (this.rule.screen1[i] || '').length > 6) ||
-            (this.rule.btPills.screen2[i] && (this.rule.screen2[i] || '').length > 6)
+            (this.rule.btPills.screen1[i] && (this.rule.screen1[i] || '').length >= 6) ||
+            (this.rule.btPills.screen2[i] && (this.rule.screen2[i] || '').length >= 6)
         );
         const warningHint = hasAnyWarning
             ? `<div class="bt-char-warning-hint">Pill values use 2–3 characters of the 8-character limit. Shorten highlighted fields to 6 or fewer, or add another rule.</div>`
@@ -760,12 +823,17 @@ class RuleComponent {
         const isBtTravelTime = metric && metric.value === 'bt_travel_time';
 
         // BACKEND NOTE: "Bluetooth Travel Time" metric.
-        // The dropdown must contain ONLY Bluetooth routes (sensors where isBluetooth === true).
-        // Regular sensors must NOT appear here. The selected value is still saved into rule.sensor
-        // (same field as a regular sensor id), so no schema change is required - the value is
-        // simply the id of a Bluetooth route sensor instead of a regular sensor.
+        // The dropdown must contain ONLY Bluetooth routes (sensors where isBluetooth === true)
+        // AND only those routes that are assigned to the currently-selected PCMS device.
+        // BT routes share the device's associatedSensors list (see the Bluetooth Routes
+        // accordion which writes into list 1), so we filter that list down to BT-flagged
+        // sensors. The selected value is still saved into rule.sensor (same field as a
+        // regular sensor id) - the value is simply the id of a Bluetooth route sensor.
         if (isBtTravelTime) {
-            const btRoutes = this.app.data.sensors.filter(s => s.isBluetooth === true);
+            const assignedIds = this.app.currentDevice.associatedSensors || [];
+            const btRoutes = assignedIds
+                .map(id => this.app.data.sensors.find(s => s.id === id))
+                .filter(s => s && s.isBluetooth === true);
             return btRoutes.map(route => {
                 const selected = this.rule.sensor == route.id ? 'selected' : '';
                 return `<option value="${route.id}" ${selected}>${route.name}</option>`;
@@ -848,6 +916,17 @@ class RuleComponent {
 
         // Metric change
         card.querySelector('.metric-select').addEventListener('change', (e) => {
+            // Some Bluetooth logic types cannot be mixed with other logic types on the same
+            // PCMS (see checkLogicConflict for the matrix). If the user picks an incompatible
+            // metric, revert the dropdown and show an error modal instead of saving the change.
+            const previousMetricId = this.rule.metric;
+            const conflict = this.checkLogicConflict(e.target.value);
+            if (conflict) {
+                e.target.value = previousMetricId || '';
+                this.showLogicConflictModal(conflict);
+                return;
+            }
+
             const wasBluetooth = this.isBluetoothMetric();
             const wasBtTravelTime = this.isBluetoothTravelTimeMetric();
             this.rule.metric = e.target.value;
@@ -958,7 +1037,13 @@ class RuleComponent {
                     const sel = window.getSelection();
                     const selectionLen = sel ? sel.toString().length : 0;
                     const currentLen = this.parseChipEditable(el).text.length;
-                    if (currentLen - selectionLen + insertText.length > 8) {
+                    // A pill chip uses 2–3 of the 8-character display line, so when a pill is
+                    // present the typed text is capped at 6. Warning at 6, hard block past 6.
+                    const screenAttr = parseInt(el.dataset.screen);
+                    const lineIdxAttr = parseInt(el.dataset.line) - 1;
+                    const hasPill = !!(this.rule.btPills?.[`screen${screenAttr}`]?.[lineIdxAttr]);
+                    const maxLen = hasPill ? 6 : 8;
+                    if (currentLen - selectionLen + insertText.length > maxLen) {
                         e.preventDefault();
                     }
                 });
@@ -1083,9 +1168,9 @@ class RuleComponent {
                     : (isNaN(Number(sensorIdRaw)) ? sensorIdRaw : Number(sensorIdRaw));
                 const payload = JSON.stringify({
                     pillType: draggable.dataset.pillType,
-                    mode:     draggable.dataset.pillMode,
+                    mode: draggable.dataset.pillMode,
                     sensorId: sensorId,
-                    source:   draggable.dataset.pillSource ? Number(draggable.dataset.pillSource) : 1
+                    source: draggable.dataset.pillSource ? Number(draggable.dataset.pillSource) : 1
                 });
                 e.dataTransfer.setData('application/bt-pill', payload);
                 e.dataTransfer.effectAllowed = 'copy';
@@ -1178,9 +1263,9 @@ class RuleComponent {
                 // comment near getPillKind() for the schema. sensorId is null for PCMS pills.
                 this.rule.btPills[screenKey][lineIdx] = {
                     pillType: descriptor.pillType,
-                    mode:     descriptor.mode || 'travel_time',
+                    mode: descriptor.mode || 'travel_time',
                     sensorId: descriptor.sensorId ?? null,
-                    source:   descriptor.source || 1,
+                    source: descriptor.source || 1,
                     position
                 };
 
@@ -1360,7 +1445,7 @@ class RuleComponent {
         // Target the chip-input-container for the highlight
         const container = card.querySelector(`.chip-input-container[data-screen="${screen}"][data-line="${lineIdx + 1}"]`);
 
-        if (pill && text.length > 6) {
+        if (pill && text.length >= 6) {
             if (container) container.classList.add('bt-char-warning-field');
             this.showBtCharWarningModal();
         } else {
